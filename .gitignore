@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Data (Too large for Git)
+*.csv
+*.xlsx
+*.gz
+*.parquet
+!final_proposal_code/data/idx_ric_list.csv # Keep small reference files if needed
+
+# LaTeX
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.pdf
+*.bbl
+*.blg
+
+# System & IDE
+.DS_Store
+.vscode/
+.idea/
+.ipynb_checkpoints/
+
+# AI Instruction Files
+CLAUDE.md
+GEMINI.md

@@ -1,0 +1,231 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Honors Thesis — Draft 1
+% Using LTJournalArticle template v2.0
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[
+	a4paper,
+	10pt,
+	unnumberedsections,
+	twoside,
+]{LTJournalArticle}
+
+% Bibliography file is specified at \bibliography{} command at the end
+
+\runninghead{Mobile Trading and the Monday Effect on the IDX}
+
+\footertext{NYU Department of Economics --- Honors Thesis 2026}
+
+\setcounter{page}{1}
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\title{Did Indonesia's Mobile Trading Revolution Kill the Monday Effect? Evidence from Birru-Style Portfolio Sorts on the IDX, 2012--2024}
+
+\author{%
+	Adrian Eddy\textsuperscript{1}\thanks{Corresponding author: \href{mailto:ae2466@nyu.edu}{ae2466@nyu.edu}}
+}
+
+\date{\footnotesize\textsuperscript{\textbf{1}}Department of Economics, New York University}
+
+% Full-width abstract
+\renewcommand{\maketitlehookd}{%
+	\begin{abstract}
+		\noindent This paper examines whether Indonesia's mobile trading revolution (2017--2024) reduced or eliminated the Monday effect on the Jakarta Stock Exchange (IDX). Following the Birru (2018) portfolio-sort methodology, I construct value-weighted long-short portfolios across eight speculative-stock characteristics --- idiosyncratic volatility, maximum daily return, size, price, age, profitability, dividend-payer status, and book-to-market --- and test day-of-week excess returns and CAPM alphas using Newey-West HAC inference. Comparing a pre-mobile period (2012--2016) to a post-mobile period (2017--2024), this study investigates whether the surge in retail participation, driven by fintech platforms, attenuated sentiment-driven calendar anomalies in an emerging market setting. Preliminary results suggest [TODO: summarize key finding].
+	\end{abstract}
+}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle
+
+%----------------------------------------------------------------------------------------
+%	1. INTRODUCTION
+%----------------------------------------------------------------------------------------
+
+\section{Introduction}
+
+% Motivation: EMH and calendar anomalies
+The Efficient Market Hypothesis posits that asset prices fully incorporate all available information, precluding systematic arbitrage opportunities. Yet calendar anomalies --- predictable return patterns tied to specific days, weeks, or months --- persistently contradict this assumption. Among the most documented is the Monday effect, the tendency for stocks to underperform on Mondays, studied in U.S.\ markets since \citet{french1980} and \citet{gibbons1981}.
+
+% Birru's cross-sectional insight
+\citet{birru2018} reframed the Monday effect as a cross-sectional phenomenon. Rather than affecting the entire market uniformly, the effect concentrates in speculative stocks --- those that are small, young, volatile, unprofitable, and non-dividend-paying. Using long-short portfolio sorts, he demonstrated that Monday alone accounts for over 100\% of the monthly anomaly return, linking these patterns to well-documented weekly mood cycles in investor sentiment \citep{baker2006}.
+
+% Why Indonesia?
+This study extends Birru's framework to the Jakarta Stock Exchange, where a natural experiment offers a powerful test. Between 2017 and 2024, Indonesia experienced a mobile trading revolution that transformed market participation. The number of Securities Investor IDs surpassed 1 million in 2017 and grew rapidly thereafter, driven by fintech apps that brought millions of retail investors into the market. If the Monday effect is sentiment-driven, Indonesia's structural shift in investor composition should produce observable changes in calendar anomaly patterns.
+
+% Research question and contribution
+Specifically, this paper asks: Did Indonesia's mobile trading revolution reduce or eliminate the Monday effect on the IDX? I compare a pre-mobile period (2012--2016) to a post-mobile period (2017--2024) using Birru-style portfolio sorts across eight speculative-stock characteristics. This contributes to the literature in two ways: first, by providing out-of-sample evidence for sentiment-driven calendar effects in an emerging market, and second, by exploiting a structural break in retail participation to test whether investor composition modulates these effects.
+
+% Roadmap
+The remainder of this paper is organized as follows. Section~2 reviews the theoretical and empirical literature. Section~3 describes the data and variable construction. Section~4 details the empirical methodology. Section~5 presents results. Section~6 discusses implications, and Section~7 concludes.
+
+%----------------------------------------------------------------------------------------
+%	2. LITERATURE REVIEW
+%----------------------------------------------------------------------------------------
+
+\section{Literature Review}
+
+\subsection{Investor Sentiment and Cross-Sectional Returns}
+
+% Baker and Wurgler theoretical framework
+\citet{baker2006} established the theoretical foundation linking investor sentiment to the cross-section of stock returns. They identify two channels through which sentiment affects speculative stocks disproportionately. The demand channel operates through valuation subjectivity: stocks with ambiguous fundamentals --- young firms, non-dividend payers, high-volatility names --- allow investors to justify a wider range of valuations contingent on their current mood. The constraint channel recognizes that the same characteristics making stocks speculative also make them costly to arbitrage, preventing rational investors from correcting sentiment-driven mispricing.
+
+% Birru's day-of-week evidence
+\citet{birru2018} provides the empirical bridge between sentiment theory and calendar effects. Using long-short portfolios sorted on speculative characteristics, he documents a striking monotonic pattern in U.S.\ returns from Monday through Friday that mirrors weekly mood cycles. For portfolios short the speculative leg, Monday captures more than 100\% of the monthly long-short return; for portfolios long the speculative leg, the pattern concentrates on Fridays. These patterns survive controls for firm-specific news, macroeconomic announcements, and FOMC dates.
+
+\subsection{Emerging Markets and Predictability}
+
+% Harvey's framework
+\citet{harvey1995} documents that emerging market equity returns exhibit substantially higher predictability than developed markets, with much of this predictability driven by local information variables rather than global factors. Critically, the conditions Harvey identifies --- illiquidity, high transaction costs, short-selling restrictions, and information asymmetry --- map directly onto Baker and Wurgler's channels for sentiment-driven mispricing. This suggests that day-of-week anomalies may be amplified in emerging markets where arbitrage constraints are more severe.
+
+\subsection{The Indonesian Context}
+
+% IDX history and structural change
+The Jakarta Stock Exchange presents a particularly compelling setting. Following the 2007 merger of the Jakarta and Surabaya exchanges, the IDX has undergone a series of structural transformations \citep{yang2016}. Most relevant to this study is the mobile trading revolution beginning around 2017, which dramatically increased retail market participation. This shift from a market dominated by institutional and foreign investors to one with substantial retail presence creates a natural experiment for testing how investor composition affects sentiment-driven anomalies.
+
+% TODO: Add more specific statistics on SID growth, retail trading volume share, etc.
+
+%----------------------------------------------------------------------------------------
+%	3. DATA
+%----------------------------------------------------------------------------------------
+
+\section{Data}
+
+\subsection{Sample and Sources}
+
+This study examines the universe of common equities listed on the Jakarta Stock Exchange over a 13-year period from January 2012 through December 2024. Daily closing prices, trading volumes, and firm fundamentals are sourced from Refinitiv Workspace. The sample is divided into two sub-periods: the pre-mobile era (2012--2016) and the post-mobile era (2017--2024), with the breakpoint corresponding to the milestone of 1 million Securities Investor IDs.
+
+Preferred shares and duplicate RICs are excluded from the sample. The risk-free rate is proxied by the Bank Indonesia 7-Day Reverse Repo Rate, and the market return is the value-weighted Jakarta Composite Index (JCI).
+
+\subsection{Speculative-Stock Characteristics}
+
+Following \citet{birru2018}, stocks are sorted on eight characteristics that proxy for ``speculativeness'' as defined by \citet{baker2006}:
+
+\begin{enumerate}
+	\item \textbf{Idiosyncratic volatility (Ivol):} Standard deviation of CAPM residuals over a rolling 60-day window, lagged one month. High Ivol is speculative.
+	\item \textbf{Maximum daily return (Max):} Highest single-day return in the prior month. High Max is speculative.
+	\item \textbf{Size:} Log market capitalization, measured monthly. Low size (small firms) is speculative.
+	\item \textbf{Price:} End-of-month share price. Low price is speculative.
+	\item \textbf{Age:} Months since IPO listing on the IDX. Low age (young firms) is speculative.
+	\item \textbf{Profitability (ROA):} Return on assets from quarterly fundamentals. Low ROA (unprofitable firms) is speculative.
+	\item \textbf{Dividend payer:} Binary indicator for whether the firm paid a dividend in the trailing twelve months. Non-payers are speculative.
+	\item \textbf{Book-to-market (BM):} Book value per share divided by market price. High BM is speculative.
+\end{enumerate}
+
+All characteristics except Ivol, Max, and Dividend are rebalanced annually using June values applied from July through June, following the \citet{fama1993} convention. Monthly characteristics are lagged one month to avoid look-ahead bias.
+
+\subsection{Filters}
+
+Following standard practice in the literature, several filters are applied:
+\begin{itemize}
+	\item Stocks must have at least 15 trading days in the formation month (for monthly-rebalanced characteristics).
+	\item Financial-sector firms are excluded from the ROA sort.
+	\item Firms with negative book value per share are excluded from the BM sort.
+\end{itemize}
+
+%----------------------------------------------------------------------------------------
+%	4. METHODOLOGY
+%----------------------------------------------------------------------------------------
+
+\section{Methodology}
+
+\subsection{Portfolio Construction}
+
+The empirical design follows the Birru (2018) JFE-style portfolio-sort approach:
+
+\begin{enumerate}
+	\item \textbf{Cross-sectional sort:} Each month (or each June for annual characteristics), stocks are sorted into quintiles based on a speculative characteristic. For the binary dividend variable, stocks are grouped into payers and non-payers.
+	\item \textbf{Value-weighted returns:} Daily value-weighted portfolio returns are computed for the top quintile (speculative leg) and bottom quintile (safe leg), plus the long-short spread defined as Safe minus Speculative:
+	\begin{equation}
+		R_{\text{L-S},d} = R_{\text{Safe},d} - R_{\text{Speculative},d}
+		\label{eq:ls}
+	\end{equation}
+	\item \textbf{Day-of-week separation:} Daily portfolio returns are separated by day of the week: Monday, Friday, and a Tuesday--Thursday aggregate.
+	\item \textbf{Monthly aggregation:} Daily returns within each (month $\times$ day-of-week) cell are summed to produce monthly return observations.
+\end{enumerate}
+
+\subsection{Time-Series Tests}
+
+The final inference is drawn from time-series regressions on the monthly aggregated portfolio returns. Two specifications are estimated with Newey-West HAC standard errors:
+
+\textbf{Mean test.} Monthly excess portfolio returns are regressed on a constant only:
+\begin{equation}
+	R^{e}_{p,t} = \alpha + \varepsilon_t
+	\label{eq:mean}
+\end{equation}
+This tests $H_0\colon \alpha = 0$, i.e., whether the mean excess return for a given day-of-week portfolio is significantly different from zero.
+
+\textbf{CAPM alpha.} Monthly excess portfolio returns are regressed on a constant and the market excess return:
+\begin{equation}
+	R^{e}_{p,t} = \alpha + \beta (R_{M,t} - R_{f,t}) + \varepsilon_t
+	\label{eq:capm}
+\end{equation}
+The intercept $\alpha$ is the risk-adjusted abnormal return.
+
+The unit of observation in both regressions is a month, not a stock. The portfolio sort (steps 1--2) is a cross-sectional operation that produces the return series, but inference is drawn from time-series tests on those portfolio returns --- the standard ``portfolio sort + time-series test'' approach from empirical asset pricing.
+
+\subsection{Pre--Post Comparison}
+
+To test whether Indonesia's mobile trading revolution attenuated the Monday effect, all regressions are estimated separately for the pre-mobile period (2012--2016) and the post-mobile period (2017--2024). Sensitivity analyses use alternative breakpoints at 2016 and 2020 to assess robustness.
+
+%----------------------------------------------------------------------------------------
+%	5. RESULTS
+%----------------------------------------------------------------------------------------
+
+\section{Results}
+
+% TODO: Insert result tables from output/
+% Available tables:
+%   \input{../final_proposal_code/output/dow_excess_returns.tex}
+%   \input{../final_proposal_code/output/dow_capm_alphas.tex}
+%   \input{../final_proposal_code/output/split_sample_201701.tex}
+%   \input{../final_proposal_code/output/dummy_mean_201701.tex}
+
+\subsection{Full-Sample Day-of-Week Patterns}
+
+% TODO: Describe full-sample excess returns and CAPM alphas by day-of-week
+
+\subsection{Pre-Mobile vs.\ Post-Mobile Comparison}
+
+% TODO: Describe split-sample results
+
+\subsection{Sensitivity Analysis}
+
+% TODO: Alternative breakpoints (2016, 2020)
+
+%----------------------------------------------------------------------------------------
+%	6. DISCUSSION
+%----------------------------------------------------------------------------------------
+
+\section{Discussion}
+
+% TODO: Interpret results in light of:
+% - Birru (2018) U.S. patterns
+% - Baker and Wurgler (2006) sentiment channels
+% - Harvey (1995) emerging market predictability
+% - Yang and Pangastuti (2016) IDX institutional structure
+% - Role of foreign vs. retail investors
+% - Friday prayer / cultural factors
+
+%----------------------------------------------------------------------------------------
+%	7. CONCLUSION
+%----------------------------------------------------------------------------------------
+
+\section{Conclusion}
+
+% TODO: Summarize findings, limitations, and future research directions
+
+%----------------------------------------------------------------------------------------
+%	REFERENCES
+%----------------------------------------------------------------------------------------
+
+\bibliography{references}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
