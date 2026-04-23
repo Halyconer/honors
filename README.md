@@ -18,7 +18,7 @@ Honors/
 │   │   ├── 03_generate_visuals.py        # Step 3: Charts & visualization
 │   │   └── cs_utils/                     # Core analysis logic
 │   ├── data/                             # Large CSV files (gitignored)
-│   ├── notebooks/                        # Data download notebooks
+│   ├── notebooks/                        # Data download (01_fetch_..., etc.)
 │   └── output/                           # Results & LaTeX tables
 ├── final_paper/                          # Thesis LaTeX source
 ├── papers/                               # Literature library
