@@ -2,18 +2,21 @@
 01_PREPARE_PANEL.PY
 Step 1 — Data Preparation for Cross-Sectional Analysis (Birru 2018 JFE)
 ======================================================================
-Cleans the raw panel and fundamentals, producing two analysis-ready files:
+Produces:
+  data/analysis_daily.csv        — cleaned daily stock returns
+  data/stock_characteristics.csv — monthly characteristics for portfolio sorts
 
-  data/analysis_daily.csv      — cleaned daily stock returns (filtered)
-  data/stock_characteristics.csv — monthly stock characteristics for portfolio sorts
-
-Usage:
-    python scripts/01_prepare_panel.py
+Updates:
+  - Extended range: 2008-2024
+  - Integrated Foreign Ownership data
+  - Improved MAX and IVOL logic
 """
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import warnings
+warnings.filterwarnings('ignore')
 
 # ── Paths ────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent.parent
@@ -21,125 +24,99 @@ DATA = ROOT / "data"
 
 # ── Config ───────────────────────────────────────────────────────────────
 DROP_RICS = [
-    "MYRX_p.JK^G25",   # preferred share (common = MYRX.JK^G25)
-    "RMKOn.JK",         # duplicate listing class (common = RMKO.JK)
-    "CNTX_p.JK",        # orphan preferred share
-    "SQBI_p.JK^C18",    # orphan preferred share
+    "MYRX_p.JK^G25", "RMKOn.JK", "CNTX_p.JK", "SQBI_p.JK^C18",
 ]
-DATE_START = "2012-01-01"
+DATE_START = "2008-01-01"
 DATE_END   = "2024-12-31"
 
 # =====================================================================
-# 1. LOAD RAW DATA
+# 1. LOAD DATA
 # =====================================================================
 print("Loading data...")
-panel = pd.read_csv(DATA / "idx_master_panel.csv", parse_dates=["Date"])
-fund  = pd.read_csv(DATA / "idx_fundamentals.csv", parse_dates=["Date", "IPO_Date"])
-print(f"  Panel: {len(panel):,} rows, {panel['Instrument'].nunique()} stocks")
-print(f"  Fundamentals: {len(fund):,} rows, {fund['Instrument'].nunique()} stocks")
+# Use low_memory=False to avoid DtypeWarnings on large panels
+panel = pd.read_csv(DATA / "idx_master_panel.csv", parse_dates=["Date"], low_memory=False)
+fund  = pd.read_csv(DATA / "idx_fundamentals.csv", parse_dates=["Date"], low_memory=False)
+own   = pd.read_csv(DATA / "idx_institutional_ownership.csv", parse_dates=["Date"], low_memory=False)
+
+print(f"  Prices: {len(panel):,} rows")
+print(f"  Fundamentals: {len(fund):,} rows")
+print(f"  Ownership: {len(own):,} rows")
 
 # =====================================================================
-# 2. DROP DUPLICATE / PREFERRED RICS
+# 2. CLEANING & FILTERING
 # =====================================================================
-n_before = panel["Instrument"].nunique() # count unique stocks before dropping
+# Drop preferreds/duplicates
 panel = panel[~panel["Instrument"].isin(DROP_RICS)].copy()
 fund  = fund[~fund["Instrument"].isin(DROP_RICS)].copy()
-n_after = panel["Instrument"].nunique()
-print(f"\nDropped {n_before - n_after} duplicate/preferred RICs → {n_after} stocks")
+own   = own[~own["Instrument"].isin(DROP_RICS)].copy()
 
-# =====================================================================
-# 3. FILTER TO ANALYSIS PERIOD
-# =====================================================================
+# Date filter
 panel = panel[(panel["Date"] >= DATE_START) & (panel["Date"] <= DATE_END)].copy()
-print(f"Filtered to {DATE_START[:7]}–{DATE_END[:7]}: {len(panel):,} rows")
+print(f"\nFiltered to {DATE_START}–{DATE_END}: {len(panel):,} daily rows")
 
-# =====================================================================
-# 4. ADD PERIOD INDICATOR
-# =====================================================================
-panel["Period"] = np.where(panel["Date"] < "2017-01-01", "Pre", "Post")
-pre_n  = (panel["Period"] == "Pre").sum()
-post_n = (panel["Period"] == "Post").sum()
-print(f"  Pre  (2012-2016): {pre_n:,} rows")
-print(f"  Post (2017-2024): {post_n:,} rows")
-
-# =====================================================================
-# 5. WINSORIZE STOCK RETURNS (1st/99th percentile)
-# =====================================================================
+# Winsorize Daily Returns (1%/99%) to handle IDX "limit" outliers
 if "Stock_Return" in panel.columns:
-    p01 = panel["Stock_Return"].quantile(0.01)
-    p99 = panel["Stock_Return"].quantile(0.99)
-    n_clipped = ((panel["Stock_Return"] < p01) | (panel["Stock_Return"] > p99)).sum()
+    p01, p99 = panel["Stock_Return"].quantile([0.01, 0.99])
     panel["Stock_Return"] = panel["Stock_Return"].clip(lower=p01, upper=p99)
-    print(f"\nWinsorized Stock_Return at [{p01:.4f}, {p99:.4f}]: {n_clipped:,} obs clipped")
+    print(f"Winsorized Stock_Return at [{p01:.4f}, {p99:.4f}]")
 
 # =====================================================================
-# 6. SAVE CLEANED DAILY PANEL
+# 3. BUILD MONTHLY CHARACTERISTICS
 # =====================================================================
-panel.to_csv(DATA / "analysis_daily.csv", index=False)
-print(f"\nSaved analysis_daily.csv: {len(panel):,} rows, {panel['Instrument'].nunique()} stocks")
+print("\nBuilding monthly characteristics...")
 
-# =====================================================================
-# 7. BUILD MONTHLY STOCK CHARACTERISTICS
-# =====================================================================
-print("\n--- Building monthly characteristics ---")
-
-# Fundamentals: convert to year-month, keep latest obs per stock-month
+# 3.1. Fundamental Characteristics
 fund["YearMonth"] = fund["Date"].dt.to_period("M").astype(str)
-fund = fund.sort_values("Date").groupby(["Instrument", "YearMonth"]).last().reset_index()
+fund_m = fund.sort_values("Date").groupby(["Instrument", "YearMonth"]).last().reset_index()
 
-# Filter fundamentals to analysis period
-fund = fund[(fund["YearMonth"] >= "2012-01") & (fund["YearMonth"] <= "2024-12")]
+# 3.2. Ownership Characteristics (Foreign Pct)
+own["YearMonth"] = own["Date"].dt.to_period("M").astype(str)
+own_m = own.sort_values("Date").groupby(["Instrument", "YearMonth"]).last().reset_index()
+own_m = own_m[["Instrument", "YearMonth", "Foreign_Pct", "Institutional_Pct"]]
 
-# Start with fundamental-based characteristics (directly available)
-chars = fund[["Instrument", "YearMonth", "Market_Cap", "Market_Cap_Bil",
-              "ROA", "BVPS", "Div_Payer", "Months_Since_Listing",
-              "Shares_Outstanding", "Sector"]].copy()
+# 3.3. Price-based Characteristics (IVOL, MAX, Size)
+panel["YearMonth"] = panel["Date"].dt.to_period("M").astype(str)
 
-# Log market cap (for size sorts — more normally distributed)
-# chars["Log_MCap"] = np.log(chars["Market_Cap"].clip(lower=1))
-
-# ── Price-based characteristics from daily panel ─────────────────────
-# Group daily data by stock-month
-panel["YearMonth_p"] = panel["Date"].dt.to_period("M").astype(str)
-
-monthly_price = panel.groupby(["Instrument", "YearMonth_p"]).agg(
-    Mean_Price=("Price", "mean"),
+# MAX characteristic (max daily return in month)
+# IVOL proxy (std dev of daily returns in month)
+price_m = panel.groupby(["Instrument", "YearMonth"]).agg(
     End_Price=("Price", "last"),
-    Monthly_Volume=("Volume", "sum"),
-    Trading_Days=("Price", "count"),
-    Std_Return=("Stock_Return", "std"),
     Max_Return=("Stock_Return", "max"),
-    Min_Return=("Stock_Return", "min"),
-).reset_index().rename(columns={"YearMonth_p": "YearMonth"})
+    IVOL_Proxy=("Stock_Return", "std"),
+    Volume_Monthly=("Volume", "sum"),
+    Trading_Days=("Date", "count")
+).reset_index()
 
-# Max absolute daily return in month (Birru's "Max" characteristic)
-monthly_price["Max_Abs_Return"] = monthly_price[["Max_Return", "Min_Return"]].abs().max(axis=1)
+# 3.4. MERGE ALL
+chars = price_m.merge(fund_m, on=["Instrument", "YearMonth"], how="left", suffixes=('', '_fund'))
+chars = chars.merge(own_m, on=["Instrument", "YearMonth"], how="left")
 
-chars = chars.merge(monthly_price, on=["Instrument", "YearMonth"], how="outer")
+# 3.5. DERIVED FIELDS
+# Size = log of Market_Cap_Bil
+chars["Size"] = np.log(chars["Market_Cap_Bil"].clip(lower=0.1))
 
-# Book-to-Market ratio: BVPS / Price
-chars["BM_Ratio"] = chars["BVPS"] / chars["End_Price"].clip(lower=1)
+# Book-to-Market
+chars["BM_Ratio"] = chars["BVPS"] / chars["End_Price"].clip(lower=0.1)
 
-# Turnover: monthly volume / shares outstanding
-chars["Turnover"] = chars["Monthly_Volume"] / chars["Shares_Outstanding"].clip(lower=1)
+# Quality filter: minimum 15 trading days in a month for volatility/max to be valid
+chars = chars[chars["Trading_Days"] >= 15]
 
-# Drop rows with no identifying info
-chars = chars.dropna(subset=["Instrument", "YearMonth"])
-
-# ── Lag characteristics by 1 month (avoid look-ahead bias) ──────────
-# For portfolio formation in month t, use characteristics from month t-1
+# =====================================================================
+# 4. IMPLEMENT LAGS (Portfolio sort at end of m-1, returns in m)
+# =====================================================================
+# For a portfolio in month T, we use characteristics known at T-1
 chars["Sort_YearMonth"] = (
     pd.to_datetime(chars["YearMonth"]) + pd.DateOffset(months=1)
 ).dt.to_period("M").astype(str)
 
-# Sort_YearMonth = the month in which this characteristic will be used for sorting
-# If characteristic is measured in 2015-06, it's used for sorting in 2015-07
-
-chars = chars[(chars["Sort_YearMonth"] >= "2012-01") &
-              (chars["Sort_YearMonth"] <= "2024-12")]
+print(f"Final Characteristic Panel: {len(chars):,} rows")
 
 # =====================================================================
-# 8. SAVE CHARACTERISTICS
+# 5. SAVE
 # =====================================================================
+panel.to_csv(DATA / "analysis_daily.csv", index=False)
 chars.to_csv(DATA / "stock_characteristics.csv", index=False)
-print(f"Saved stock_characteristics.csv: {len(chars):,} rows, {chars['Instrument'].nunique()} stocks")
+
+print("\nSuccess!")
+print(f"Saved analysis_daily.csv ({len(panel):,} rows)")
+print(f"Saved stock_characteristics.csv ({len(chars):,} rows)")

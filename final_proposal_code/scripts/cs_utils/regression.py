@@ -158,14 +158,10 @@ def run_mean_test_dummy(excess_returns, break_ym):
 
 def run_capm_dummy(excess_returns, monthly_mktrf, break_ym):
     """
-    Pooled CAPM with Post dummy:
-        excess_return = alpha + delta * Post + beta * MktRF + epsilon
+    Full-Interaction Pooled CAPM (Chow-style):
+        excess_return = alpha + delta*Post + beta*MktRF + theta*(MktRF*Post) + eps
 
-    alpha = Pre-period CAPM alpha.
-    delta = shift in alpha from Pre to Post.
-    Tests H0: delta = 0.
-
-    Returns (result_obj, n_obs) or (None, n_obs).
+    This tests for shifts in BOTH the alpha (anomaly) and beta (risk).
     """
     df = pd.DataFrame({"Y": excess_returns, "MktRF": monthly_mktrf}).dropna()
     if len(df) < 12:
@@ -177,7 +173,19 @@ def run_capm_dummy(excess_returns, monthly_mktrf, break_ym):
         "const": np.ones(len(df)),
         "Post": post,
         "MktRF": df["MktRF"],
+        "MktRF_Post": df["MktRF"] * post
     }, index=df.index)
+    
     lag = nw_lag(len(df))
     result = sm.OLS(Y, X).fit(cov_type="HAC", cov_kwds={"maxlags": lag})
+    
+    # Structural Break F-Test (Chow Test equivalent)
+    # H0: delta = 0 and theta = 0 (No change in alpha or beta)
+    try:
+        f_test = result.f_test("Post = 0, MktRF_Post = 0")
+        result.chow_f = f_test.fvalue
+        result.chow_p = f_test.pvalue
+    except:
+        result.chow_f, result.chow_p = np.nan, np.nan
+
     return result, len(df)

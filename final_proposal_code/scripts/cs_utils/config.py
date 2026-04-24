@@ -16,24 +16,25 @@ CHARS = {
         "rebalance": "monthly",
         "filter": "min15",
     },
+    "BM": {
+        "col": "BM_Ratio",
+        "spec_is": "low", # LOW BM (Growth) is speculative/glamour
+        "rebalance": "annual",
+        "filter": "no_neg_bvps",
+    },
     "Size": {
         "col": "Log_MCap",
-        "spec_is": "low",
-        "rebalance": "annual",
-        "filter": None,
-    },
-    "Price": {
-        "col": "End_Price",
-        "spec_is": "low",
+        "spec_is": "low", # Small is speculative
         "rebalance": "annual",
         "filter": None,
     },
     "Age": {
         "col": "Months_Since_Listing",
-        "spec_is": "low",
+        "spec_is": "low", # Young is speculative
         "rebalance": "annual",
         "filter": None,
     },
+
     "ROA": {
         "col": "ROA",
         "spec_is": "low",
