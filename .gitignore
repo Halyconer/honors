@@ -23,20 +23,28 @@ venv/
 *.pdf
 *.bbl
 *.blg
+final_proposal_code/output/preview_refs.bib
 
 # System & IDE
 .DS_Store
 .vscode/
 .idea/
 .ipynb_checkpoints/
+.Rhistory
 
-# AI Instruction Files
+# AI Boundaries
 CLAUDE.md
 GEMINI.md
-
-# AI Memory & Sessions
 .gemini/
 .cowork/
 .claudecode/
 COWORK_MEMORY.md
+!README.md
+!CLAUDE.md
+!GEMINI.md
+
+# Research Notes & Working Docs
+*.md
 TODO.md
+
+

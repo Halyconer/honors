@@ -69,6 +69,13 @@ print("\nBuilding monthly characteristics...")
 fund["YearMonth"] = fund["Date"].dt.to_period("M").astype(str)
 fund_m = fund.sort_values("Date").groupby(["Instrument", "YearMonth"]).last().reset_index()
 
+# Forward-fill fundamentals per instrument (max 12 months)
+# This is crucial because reporting is infrequent (quarterly/annual)
+# but we need monthly characteristics for sorting.
+fund_m = fund_m.sort_values(["Instrument", "YearMonth"])
+cols_to_ffill = ["Market_Cap_Bil", "ROA", "BVPS", "Div_Payer", "Market_Cap"]
+fund_m[cols_to_ffill] = fund_m.groupby("Instrument")[cols_to_ffill].ffill(limit=12)
+
 # 3.2. Ownership Characteristics (Foreign Pct)
 own["YearMonth"] = own["Date"].dt.to_period("M").astype(str)
 own_m = own.sort_values("Date").groupby(["Instrument", "YearMonth"]).last().reset_index()
@@ -92,6 +99,13 @@ chars = price_m.merge(fund_m, on=["Instrument", "YearMonth"], how="left", suffix
 chars = chars.merge(own_m, on=["Instrument", "YearMonth"], how="left")
 
 # 3.5. DERIVED FIELDS
+# Ensure Market_Cap is available (fund_m has Market_Cap_Bil)
+if "Market_Cap" not in chars.columns:
+    chars["Market_Cap"] = chars["Market_Cap_Bil"] * 1e9
+
+# Filter out non-positive market cap to avoid log errors and weighting issues
+chars = chars[chars["Market_Cap"] > 0].copy()
+
 # Size = log of Market_Cap_Bil
 chars["Size"] = np.log(chars["Market_Cap_Bil"].clip(lower=0.1))
 

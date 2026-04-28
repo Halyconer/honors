@@ -3,7 +3,7 @@
 Visualizing the Birru Effect and the Mobile Revolution (2017)
 ============================================================
 Creates three key figures:
-1. The Monday-to-Friday "V-Curve" for Speculative deciles.
+1. The Monday-to-Friday "V-Curve" for Speculative quintiles.
 2. Pre- vs. Post-2017 comparison of Monday spreads.
 3. Distribution shift of Monday returns.
 """
@@ -39,7 +39,7 @@ def plot_v_curve(daily, characteristic="Max_Return"):
     print(f"Generating V-Curve for {characteristic}...")
     
     # Simple day-of-week average for the full sample
-    # (In a real paper, you'd use the decile returns from the regression, 
+    # (In a real paper, you'd use the quintile returns from the regression,
     # but we'll approximate here for the visual)
     
     dow_map = {0: 'Mon', 1: 'Tue', 2: 'Wed', 3: 'Thu', 4: 'Fri'}

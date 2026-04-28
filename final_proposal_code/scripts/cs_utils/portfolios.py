@@ -1,5 +1,5 @@
 """
-Portfolio construction: anomaly filters, decile assignment, L-S returns.
+Portfolio construction: anomaly filters, quintile assignment, L-S returns.
 """
 
 import pandas as pd
@@ -42,8 +42,8 @@ def apply_anomaly_filter(chars_df, filter_type):
     return df
 
 
-def assign_deciles_monthly(chars_df, col, n_portfolios):
-    """Assign decile ranks (1..n_portfolios) per Sort_YearMonth."""
+def assign_quintiles_monthly(chars_df, col, n_portfolios):
+    """Assign quintile ranks (1..n_portfolios) per Sort_YearMonth."""
     c = chars_df[["Instrument", "Sort_YearMonth", col, "Market_Cap"]].dropna(subset=[col]).copy()
 
     def qcut_safe(x):
@@ -53,15 +53,15 @@ def assign_deciles_monthly(chars_df, col, n_portfolios):
         except ValueError:
             return pd.Series(np.nan, index=x.index)
 
-    c["Decile"] = (
+    c["Quintile"] = (
         c.groupby("Sort_YearMonth")[col]
         .transform(qcut_safe)
         .astype(float)
     )
-    return c[["Instrument", "Sort_YearMonth", "Decile", "Market_Cap"]].dropna()
+    return c[["Instrument", "Sort_YearMonth", "Quintile", "Market_Cap"]].dropna()
 
 
-def assign_deciles_annual(chars_df, col, n_portfolios):
+def assign_quintiles_annual(chars_df, col, n_portfolios):
     """
     Annual rebalancing: use June characteristics (Sort_YearMonth ending in -07,
     since June chars have Sort_YearMonth = July due to 1-month lag).
@@ -69,13 +69,21 @@ def assign_deciles_annual(chars_df, col, n_portfolios):
     """
     c = chars_df[["Instrument", "Sort_YearMonth", col, "Market_Cap"]].dropna(subset=[col]).copy()
 
-    # Keep only July sort months (= June measurement months)
+    # Keep only July sort months (= June measurement months, after 1-month lag).
+    # Any stock that has June data but no July row in the characteristics file
+    # will be silently excluded from that year's sort.  Print coverage so the
+    # caller can verify no systematic gaps exist (critical for FF3, where every
+    # stock needs a June Size and BM to set SMB/HML breakpoints).
     c["sort_month"] = pd.to_datetime(c["Sort_YearMonth"]).dt.month
+    all_stocks = c["Instrument"].nunique()
     june_sorts = c[c["sort_month"] == 7].copy()
+    july_stocks = june_sorts["Instrument"].nunique()
+    print(f"    Annual coverage: {july_stocks}/{all_stocks} stocks have a July sort month "
+          f"({july_stocks / max(all_stocks, 1):.1%})")
 
     if len(june_sorts) == 0:
         print(f"    WARNING: No July sort months found for {col}")
-        return pd.DataFrame(columns=["Instrument", "Sort_YearMonth", "Decile", "Market_Cap"])
+        return pd.DataFrame(columns=["Instrument", "Sort_YearMonth", "Quintile", "Market_Cap"])
 
     def qcut_safe(x):
         try:
@@ -84,12 +92,12 @@ def assign_deciles_annual(chars_df, col, n_portfolios):
         except ValueError:
             return pd.Series(np.nan, index=x.index)
 
-    june_sorts["Decile"] = (
+    june_sorts["Quintile"] = (
         june_sorts.groupby("Sort_YearMonth")[col]
         .transform(qcut_safe)
         .astype(float)
     )
-    june_sorts = june_sorts[["Instrument", "Sort_YearMonth", "Decile", "Market_Cap"]].dropna()
+    june_sorts = june_sorts[["Instrument", "Sort_YearMonth", "Quintile", "Market_Cap"]].dropna()
 
     # Expand: each July sort holds through the following June
     expanded = []
@@ -100,7 +108,7 @@ def assign_deciles_annual(chars_df, col, n_portfolios):
             expanded.append({
                 "Instrument": row["Instrument"],
                 "Sort_YearMonth": str(ym),
-                "Decile": row["Decile"],
+                "Quintile": row["Quintile"],
                 "Market_Cap": row["Market_Cap"],
             })
 
@@ -116,26 +124,26 @@ def _vw_return(group):
     return (group["Stock_Return"] * mcap / total).sum()
 
 
-def compute_daily_ls_vw(daily_df, decile_df, spec_is, n_portfolios):
+def compute_daily_ls_vw(daily_df, quintile_df, spec_is, n_portfolios):
     """
     Compute daily VALUE-WEIGHTED L-S returns with individual legs.
 
     Returns DataFrame indexed by Date with columns:
         Spec_Return, Safe_Return, LS_Return (= Safe - Spec)
     """
-    d_merge = decile_df.rename(columns={"Sort_YearMonth": "YearMonth"})
+    d_merge = quintile_df.rename(columns={"Sort_YearMonth": "YearMonth"})
     merged = daily_df[["Date", "Instrument", "YearMonth", "Stock_Return"]].merge(
-        d_merge[["Instrument", "YearMonth", "Decile", "Market_Cap"]],
+        d_merge[["Instrument", "YearMonth", "Quintile", "Market_Cap"]],
         on=["Instrument", "YearMonth"], how="inner"
     )
 
     if spec_is == "high":
-        spec_decile, safe_decile = n_portfolios, 1
+        spec_q, safe_q = n_portfolios, 1
     else:  # 'low'
-        spec_decile, safe_decile = 1, n_portfolios
+        spec_q, safe_q = 1, n_portfolios
 
-    spec = merged[merged["Decile"] == spec_decile].groupby("Date").apply(_vw_return, include_groups=False)
-    safe = merged[merged["Decile"] == safe_decile].groupby("Date").apply(_vw_return, include_groups=False)
+    spec = merged[merged["Quintile"] == spec_q].groupby("Date").apply(_vw_return, include_groups=False)
+    safe = merged[merged["Quintile"] == safe_q].groupby("Date").apply(_vw_return, include_groups=False)
 
     result = pd.DataFrame({"Spec_Return": spec, "Safe_Return": safe})
     result["LS_Return"] = result["Safe_Return"] - result["Spec_Return"]

@@ -47,12 +47,6 @@ CHARS = {
         "rebalance": "annual",
         "filter": None,
     },
-    "BM": {
-        "col": "BM_Ratio",
-        "spec_is": "high",
-        "rebalance": "annual",
-        "filter": "no_neg_bvps",
-    },
 }
 
 DAYS = ["Monday", "Friday", "Tue-Thu"]

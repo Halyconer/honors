@@ -13,12 +13,28 @@ def stars(t):
     return ""
 
 
+def stars_p(p):
+    """Significance stars based on p-value."""
+    if p < 0.01: return "***"
+    if p < 0.05: return "**"
+    if p < 0.10: return "*"
+    return ""
+
+
 def _get_alpha_t(results, char_name, day_group, leg):
     """Extract alpha (bps) and t-stat from results dict."""
     obj, n = results.get((char_name, day_group, leg), (None, 0))
     if obj is None:
         return None, None
     return obj.params["const"] * 10_000, obj.tvalues["const"]
+
+
+def _get_f_p(results, char_name, day_group, leg):
+    """Extract break F-stat and p-value from results dict."""
+    obj, n = results.get((char_name, day_group, leg), (None, 0))
+    if obj is None or not hasattr(obj, "break_f"):
+        return None, None
+    return obj.break_f, obj.break_p
 
 
 def print_panel(results, title, leg):
@@ -48,7 +64,7 @@ def print_panel(results, title, leg):
 def print_results(results):
     """Print all three panels to terminal."""
     print("\n" + "=" * 60)
-    print("  Excess Returns (bps/month), Equal-Weighted")
+    print("  Excess Returns (bps/month), Value-Weighted")
     print("  Newey-West HAC t-stats in parentheses")
     print("=" * 60)
 
@@ -210,6 +226,18 @@ def print_split_sample(pre_results, post_results, break_ym):
         print_panel(res, f"Panel A: L-S (Safe minus Speculative)", "LS")
 
 
+def print_ff3_split_sample(pre_results, post_results, break_ym):
+    """Print Pre vs Post side-by-side for FF3 alphas."""
+    print(f"\n{'=' * 80}")
+    print(f"  SPLIT-SAMPLE FF3 ALPHAS (bps/month) — Break at {break_ym}")
+    print(f"  Newey-West HAC t-stats in parentheses")
+    print(f"{'=' * 80}")
+
+    for period_label, res in [("Pre", pre_results), ("Post", post_results)]:
+        print(f"\n  --- {period_label}-period ---")
+        print_panel(res, f"Panel A: L-S (Safe minus Speculative)", "LS")
+
+
 def print_dummy_results(dummy_results, break_ym):
     """Print Post dummy coefficient (delta) for each characteristic × day."""
     print(f"\n{'=' * 80}")
@@ -288,6 +316,51 @@ def save_latex_split(pre_results, post_results, break_ym, output_path):
     print(f"\nLaTeX saved to {output_path}")
 
 
+def save_latex_ff3_split(pre_results, post_results, break_ym, output_path):
+    """LaTeX tables: Pre and Post FF3 as separate table environments."""
+    n_cols = len(TABLE_COLS)
+    col_spec = "l" + " c" * n_cols
+    tag = break_ym.replace("-", "")
+    note_lines = [
+        r"\begin{minipage}{0.9\textwidth}",
+        r"\footnotesize",
+        rf"Value-weighted quintile portfolios. Break date: {break_ym}. FF3 alpha.",
+        r"Newey--West HAC $t$-statistics in parentheses.",
+        r"$^{*}p<0.10$;\quad $^{**}p<0.05$;\quad $^{***}p<0.01$",
+        r"\end{minipage}",
+    ]
+
+    lines = []
+    for period_label, res, suffix in [
+        ("Pre", pre_results, "pre_ff3"),
+        ("Post", post_results, "post_ff3"),
+    ]:
+        lines.append(r"\begin{table}[htbp]")
+        lines.append(r"\centering")
+        lines.append(rf"\caption{{Day-of-Week FF3 Alphas: {period_label}-Period ({break_ym} break, bps/month)}}")
+        lines.append(rf"\label{{tab:split_ff3_{tag}_{suffix}}}")
+        lines.append(r"\footnotesize")
+        lines.append(rf"\begin{{tabular}}{{{col_spec}}}")
+        lines.append(r"\toprule")
+        header_cells = " & ".join(TABLE_COLS)
+        lines.append(rf" & {header_cells} \\")
+        lines.append(r"\midrule")
+        lines.extend(_latex_panel(res, r"Panel A: L--S (Safe $-$ Speculative)", "LS"))
+        lines.append(r"\midrule")
+        lines.extend(_latex_panel(res, "Panel B: Speculative Leg", "Spec"))
+        lines.append(r"\midrule")
+        lines.extend(_latex_panel(res, "Panel C: Safe Leg", "Safe"))
+        lines.append(r"\bottomrule")
+        lines.append(r"\end{tabular}")
+        lines.append(r"\vspace{4pt}")
+        lines.extend(note_lines)
+        lines.append(r"\end{table}")
+        lines.append("")
+
+    output_path.write_text("\n".join(lines))
+    print(f"\nLaTeX saved to {output_path}")
+
+
 def _latex_panel_dummy(results, title, leg):
     """LaTeX rows showing the Post dummy coefficient (delta) for one panel."""
     rows = []
@@ -341,6 +414,232 @@ def save_latex_dummy(dummy_results, break_ym, output_path):
     lines.append(r"\footnotesize")
     lines.append(rf"Post dummy $=1$ from {break_ym} onward. $\delta$ measures change in mean return from Pre to Post.")
     lines.append(r"Value-weighted quintile portfolios. Newey--West HAC $t$-statistics in parentheses.")
+    lines.append(r"$^{*}p<0.10$;\quad $^{**}p<0.05$;\quad $^{***}p<0.01$")
+    lines.append(r"\end{minipage}")
+    lines.append(r"\end{table}")
+
+    output_path.write_text("\n".join(lines))
+    print(f"\nLaTeX saved to {output_path}")
+
+
+def print_capm_dummy_results(dummy_results, break_ym):
+    """Print Wald F-statistics for CAPM structural break test."""
+    print(f"\n{'=' * 80}")
+    print(f"  CAPM STRUCTURAL BREAK TEST (HAC Wald F) — Break at {break_ym}")
+    print(f"  H0: No change in CAPM parameters (alpha, beta) across break")
+    print(f"  Stars based on p-values")
+    print(f"{'=' * 80}")
+
+    print(f"\n  {'Panel A: L-S (Safe minus Speculative)'}")
+    header = f"  {'':13s}"
+    for d in TABLE_COLS:
+        header += f"  {d:>12s}"
+    print(header)
+    print("  " + "-" * 52)
+
+    for char_name in CHARS:
+        row_f = f"  {char_name:13s}"
+        row_p = f"  {'':13s}"
+        for day_group in TABLE_COLS:
+            f, p = _get_f_p(dummy_results, char_name, day_group, "LS")
+            if f is not None:
+                row_f += f"  {f:>9.2f}{stars_p(p):3s}"
+                row_p += f"  {'[' + f'{p:.3f}' + ']':>12s}"
+            else:
+                row_f += f"  {'':>12s}"
+                row_p += f"  {'':>12s}"
+        print(row_f)
+        print(row_p)
+    print()
+
+
+def save_latex_capm_dummy(dummy_results, break_ym, output_path):
+    """LaTeX table for CAPM structural break (Wald F-stats)."""
+    n_cols = len(TABLE_COLS)
+    col_spec = "l" + " c" * n_cols
+
+    lines = []
+    lines.append(r"\begin{table}[htbp]")
+    lines.append(r"\centering")
+    lines.append(rf"\caption{{CAPM Structural Break Test: HAC Wald $F$-statistics --- Break at {break_ym}}}")
+    tag = break_ym.replace("-", "")
+    lines.append(rf"\label{{tab:capm_break_{tag}}}")
+    lines.append(r"\footnotesize")
+    lines.append(rf"\begin{{tabular}}{{{col_spec}}}")
+    lines.append(r"\toprule")
+    header_cells = " & ".join(TABLE_COLS)
+    lines.append(rf" & {header_cells} \\")
+    lines.append(r"\midrule")
+
+    # We only show Panel A (L-S) for the break test usually
+    rows = []
+    rows.append(rf"\multicolumn{{{n_cols + 1}}}{{l}}{{\textit{{Panel A: L--S (Safe $-$ Speculative)}}}} \\")
+    for char_name in CHARS:
+        f_cells = []
+        p_cells = []
+        for day_group in TABLE_COLS:
+            f, p = _get_f_p(dummy_results, char_name, day_group, "LS")
+            if f is not None:
+                s = stars_p(p)
+                f_cells.append(f"${f:.2f}{s}$")
+                p_cells.append(f"$[{p:.3f}]$")
+            else:
+                f_cells.append("")
+                p_cells.append("")
+        rows.append(rf"{char_name} & {' & '.join(f_cells)} \\")
+        rows.append(rf" & {' & '.join(p_cells)} \\")
+    
+    lines.extend(rows)
+
+    lines.append(r"\bottomrule")
+    lines.append(r"\end{tabular}")
+    lines.append(r"\vspace{4pt}")
+    lines.append(r"\begin{minipage}{0.9\textwidth}")
+    lines.append(r"\footnotesize")
+    lines.append(rf"Joint Wald $F$-test for shift in both $\alpha$ and $\beta$ at {break_ym}.")
+    lines.append(r"Newey--West HAC standard errors used for the covariance matrix.")
+    lines.append(r"$p$-values in brackets. $^{*}p<0.10$;\quad $^{**}p<0.05$;\quad $^{***}p<0.01$")
+    lines.append(r"\end{minipage}")
+    lines.append(r"\end{table}")
+
+    output_path.write_text("\n".join(lines))
+    print(f"\nLaTeX saved to {output_path}")
+
+
+def print_ff3_dummy_results(dummy_results, break_ym):
+    """Print Wald F-statistics for FF3 structural break test."""
+    print(f"\n{'=' * 80}")
+    print(f"  FF3 STRUCTURAL BREAK TEST (HAC Wald F) — Break at {break_ym}")
+    print(f"  H0: No change in FF3 parameters (alpha, betas) across break")
+    print(f"  Stars based on p-values")
+    print(f"{'=' * 80}")
+
+    print(f"\n  {'Panel A: L-S (Safe minus Speculative)'}")
+    header = f"  {'':13s}"
+    for d in TABLE_COLS:
+        header += f"  {d:>12s}"
+    print(header)
+    print("  " + "-" * 52)
+
+    for char_name in CHARS:
+        row_f = f"  {char_name:13s}"
+        row_p = f"  {'':13s}"
+        for day_group in TABLE_COLS:
+            f, p = _get_f_p(dummy_results, char_name, day_group, "LS")
+            if f is not None:
+                row_f += f"  {f:>9.2f}{stars_p(p):3s}"
+                row_p += f"  {'[' + f'{p:.3f}' + ']':>12s}"
+            else:
+                row_f += f"  {'':>12s}"
+                row_p += f"  {'':>12s}"
+        print(row_f)
+        print(row_p)
+    print()
+
+
+def save_latex_ff3_dummy(dummy_results, break_ym, output_path):
+    """LaTeX table for FF3 structural break (Wald F-stats)."""
+    n_cols = len(TABLE_COLS)
+    col_spec = "l" + " c" * n_cols
+
+    lines = []
+    lines.append(r"\begin{table}[htbp]")
+    lines.append(r"\centering")
+    lines.append(rf"\caption{{FF3 Structural Break Test: HAC Wald $F$-statistics --- Break at {break_ym}}}")
+    tag = break_ym.replace("-", "")
+    lines.append(rf"\label{{tab:ff3_break_{tag}}}")
+    lines.append(r"\footnotesize")
+    lines.append(rf"\begin{{tabular}}{{{col_spec}}}")
+    lines.append(r"\toprule")
+    header_cells = " & ".join(TABLE_COLS)
+    lines.append(rf" & {header_cells} \\")
+    lines.append(r"\midrule")
+
+    rows = []
+    rows.append(rf"\multicolumn{{{n_cols + 1}}}{{l}}{{\textit{{Panel A: L--S (Safe $-$ Speculative)}}}} \\")
+    for char_name in CHARS:
+        f_cells = []
+        p_cells = []
+        for day_group in TABLE_COLS:
+            f, p = _get_f_p(dummy_results, char_name, day_group, "LS")
+            if f is not None:
+                s = stars_p(p)
+                f_cells.append(f"${f:.2f}{s}$")
+                p_cells.append(f"$[{p:.3f}]$")
+            else:
+                f_cells.append("")
+                p_cells.append("")
+        rows.append(rf"{char_name} & {' & '.join(f_cells)} \\")
+        rows.append(rf" & {' & '.join(p_cells)} \\")
+    
+    lines.extend(rows)
+
+    lines.append(r"\bottomrule")
+    lines.append(r"\end{tabular}")
+    lines.append(r"\vspace{4pt}")
+    lines.append(r"\begin{minipage}{0.9\textwidth}")
+    lines.append(r"\footnotesize")
+    lines.append(rf"Joint Wald $F$-test for shift in all FF3 parameters ($\alpha, \beta_{{mkt}}, \beta_{{smb}}, \beta_{{hml}}$) at {break_ym}.")
+    lines.append(r"Newey--West HAC standard errors used for the covariance matrix.")
+    lines.append(r"$p$-values in brackets. $^{*}p<0.10$;\quad $^{**}p<0.05$;\quad $^{***}p<0.01$")
+    lines.append(r"\end{minipage}")
+    lines.append(r"\end{table}")
+
+    output_path.write_text("\n".join(lines))
+    print(f"\nLaTeX saved to {output_path}")
+
+
+def print_results_ff3(results):
+    """Print all three panels for FF3 alphas (full-month factors)."""
+    print("\n" + "=" * 60)
+    print("  FF3 Alphas — IDX SMB/HML (Foye & Valentinčič 2020)")
+    print("  Full-month MktRF + SMB + HML")
+    print("  Newey-West HAC t-stats in parentheses")
+    print("=" * 60)
+
+    print_panel(results, "Panel A: L-S (Safe minus Speculative)", "LS")
+    print_panel(results, "\n  Panel B: Speculative Leg", "Spec")
+    print_panel(results, "\n  Panel C: Safe Leg", "Safe")
+
+    print("\n" + "=" * 60)
+
+
+def save_latex_ff3(results, output_path):
+    """Save LaTeX table for FF3 alphas."""
+    n_cols = len(TABLE_COLS)
+    col_spec = "l" + " c" * n_cols
+
+    lines = []
+    lines.append(r"\begin{table}[htbp]")
+    lines.append(r"\centering")
+    lines.append(r"\caption{Day-of-Week FF3 Alphas by Speculative Characteristic (bps/month)}")
+    lines.append(r"\label{tab:dow_ff3_alphas}")
+    lines.append(r"\footnotesize")
+    lines.append(rf"\begin{{tabular}}{{{col_spec}}}")
+    lines.append(r"\toprule")
+    header_cells = " & ".join(TABLE_COLS)
+    lines.append(rf" & {header_cells} \\")
+    lines.append(r"\midrule")
+
+    lines.extend(_latex_panel(results, r"Panel A: L--S (Safe $-$ Speculative)", "LS"))
+    lines.append(r"\midrule")
+    lines.extend(_latex_panel(results, "Panel B: Speculative Leg", "Spec"))
+    lines.append(r"\midrule")
+    lines.extend(_latex_panel(results, "Panel C: Safe Leg", "Safe"))
+
+    lines.append(r"\bottomrule")
+    lines.append(r"\end{tabular}")
+    lines.append(r"\vspace{4pt}")
+    lines.append(r"\begin{minipage}{0.9\textwidth}")
+    lines.append(r"\footnotesize")
+    lines.append(
+        r"Value-weighted quintile portfolios. FF3 alpha: "
+        r"$R_{i,t} - R_{f,t} = \alpha_i + \beta_i \mathrm{MktRF}_t "
+        r"+ s_i \mathrm{SMB}_t + h_i \mathrm{HML}_t + \varepsilon_{i,t}$. "
+        r"SMB and HML constructed from IDX universe following "
+        r"Foye \& Valentin\v{c}i\v{c} (2020)."
+    )
+    lines.append(r"Newey--West HAC $t$-statistics in parentheses.")
     lines.append(r"$^{*}p<0.10$;\quad $^{**}p<0.05$;\quad $^{***}p<0.01$")
     lines.append(r"\end{minipage}")
     lines.append(r"\end{table}")

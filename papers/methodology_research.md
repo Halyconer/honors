@@ -101,7 +101,7 @@ R_t = α + Σβᵢ·Dᵢ + δ·Post + Σγᵢ·(Dᵢ × Post) + ε_t
 ```
 - γᵢ for each day shows how that day's effect changed
 
-**Supplementary — Chow test:**
+**Supplementary — Wald test:**
 - F-test comparing pooled vs separate pre/post regressions
 - Use heteroskedasticity-robust version (daily returns violate homoskedasticity)
 
@@ -315,7 +315,7 @@ Birru's own Table 2 shows results barely change across risk adjustments — the 
 | 1 | Descriptives | Summary stats + Kruskal-Wallis | — | Day-of-week return table, pre vs post |
 | 2 | Baseline OLS | Dummies (Wed omitted) | Newey-West HAC | Monday β in full/pre/post |
 | 3 | Effect coding | Deviation from grand mean | Newey-West HAC | Monday δ in full/pre/post |
-| 4 | Structural break | Mon × Post interaction | Newey-West HAC | γ coefficient + Chow test |
+| 4 | Structural break | Mon × Post interaction | Newey-West HAC | γ coefficient + Wald test |
 | 5 | Rolling window | 252-day rolling OLS | Per-window | Time-varying Monday β plot |
 | 6 | GARCH(1,1) | Dummies in mean + variance | Student-t MLE | Monday γ in mean, pre/post |
 
