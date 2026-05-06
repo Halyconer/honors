@@ -13,6 +13,9 @@ Usage:
 
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 from cs_utils.config import CHARS, DAYS, N_PORTFOLIOS, PRIMARY_BREAK, SENSITIVITY_BREAKS
 from cs_utils.data_loading import load_data, build_date_info
 from cs_utils.portfolios import (
@@ -23,19 +26,16 @@ from cs_utils.portfolios import (
     compute_binary_ls_vw,
 )
 from cs_utils.regression import (
-    aggregate_monthly_legs, run_mean_test, run_capm, run_ff3,
+    filter_and_aggregate_by_day, aggregate_monthly_legs,
+    run_mean_test, run_capm, run_ff3,
     run_mean_test_period, run_capm_period, run_ff3_period,
     run_mean_test_dummy, run_capm_dummy, run_ff3_dummy,
 )
 from cs_utils.formatting import (
-    print_results, save_latex,
-    print_results_capm, save_latex_capm,
-    print_results_capm_decomp, save_latex_capm_decomp,
-    print_results_ff3, save_latex_ff3,
-    print_split_sample, print_ff3_split_sample,
-    print_dummy_results, print_capm_dummy_results, print_ff3_dummy_results,
-    save_latex_split, save_latex_ff3_split,
-    save_latex_dummy, save_latex_capm_dummy, save_latex_ff3_dummy,
+    print_alpha_results, save_latex,
+    save_latex_capm, save_latex_capm_decomp, save_latex_ff3,
+    print_split_sample, print_dummy_results, print_wald_results,
+    save_latex_split, save_latex_dummy, save_latex_capm_dummy, save_latex_ff3_dummy,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -104,24 +104,7 @@ for char_name, config in CHARS.items():
 
     # ── Day-specific regressions ──────────────────────────────────────
     for day_group in DAYS:
-        if day_group == "Tue-Thu":
-            day_data = monthly[monthly["DayName"].isin(
-                ["Tuesday", "Wednesday", "Thursday"]
-            )]
-            tue_thu_agg = dict(
-                LS_Monthly=("LS_Monthly", "sum"),
-                Spec_Monthly=("Spec_Monthly", "sum"),
-                Safe_Monthly=("Safe_Monthly", "sum"),
-                Rf_Monthly=("Rf_Monthly", "sum"),
-                MktRF_Monthly=("MktRF_Monthly", "sum"),
-                N_Days=("N_Days", "sum"),
-            )
-            for fac in ["SMB_Monthly", "HML_Monthly"]:
-                if fac in monthly.columns:
-                    tue_thu_agg[fac] = (fac, "sum")
-            day_data = day_data.groupby("YM").agg(**tue_thu_agg).reset_index()
-        else:
-            day_data = monthly[monthly["DayName"] == day_group].copy()
+        day_data = filter_and_aggregate_by_day(monthly, day_group)
 
         monthly_by_day[(char_name, day_group)] = day_data
 
@@ -181,10 +164,10 @@ for char_name, config in CHARS.items():
         # so only the day-difference is meaningful — same logic as MktRF.
         smb_day_diff = (diff["SMB_Monthly_fri"] - diff["SMB_Monthly_mon"]
                         if "SMB_Monthly_fri" in diff.columns
-                        else mktrf_day_diff * float("nan"))
+                        else pd.Series(np.nan, index=diff.index))
         hml_day_diff = (diff["HML_Monthly_fri"] - diff["HML_Monthly_mon"]
                         if "HML_Monthly_fri" in diff.columns
-                        else mktrf_day_diff * float("nan"))
+                        else pd.Series(np.nan, index=diff.index))
 
         # Store for split-sample / dummy regressions
         excess_series[(char_name, "Fri-Mon", leg)] = excess_diff
@@ -211,16 +194,16 @@ for char_name, config in CHARS.items():
         ff3_results[(char_name, "Fri-Mon", leg)] = (ff3_obj, n_ff3)
 
 # ── Output: Full-sample tables (existing) ────────────────────────────
-print_results(results)
+print_alpha_results(results,          "Excess Returns (bps/month), Value-Weighted")
 save_latex(results, OUT / "dow_excess_returns.tex")
 
-print_results_capm(capm_results)
+print_alpha_results(capm_results,     "CAPM Alphas — Full-Month MktRF (bps/month)")
 save_latex_capm(capm_results, OUT / "dow_capm_alphas.tex")
 
-print_results_capm_decomp(capm_decomp_results)
+print_alpha_results(capm_decomp_results, "CAPM Alphas — Day-Decomposed MktRF (bps/month)")
 save_latex_capm_decomp(capm_decomp_results, OUT / "dow_capm_decomp_alphas.tex")
 
-print_results_ff3(ff3_results)
+print_alpha_results(ff3_results,      "FF3 Alphas — IDX SMB/HML (Foye & Valentincic 2020)")
 save_latex_ff3(ff3_results, OUT / "dow_ff3_alphas.tex")
 
 
@@ -276,17 +259,19 @@ for break_ym in all_breaks:
 
     # ── Terminal output ──────────────────────────────────────────────
     print_split_sample(pre_results, post_results, break_ym)
-    print_ff3_split_sample(ff3_pre_results, ff3_post_results, break_ym)
+    print_split_sample(ff3_pre_results, ff3_post_results, break_ym, kind="FF3 Alphas")
     print_dummy_results(dummy_mean_results, break_ym)
-    print_capm_dummy_results(dummy_capm_results, break_ym)
-    print_ff3_dummy_results(dummy_ff3_results, break_ym)
+    print_wald_results(dummy_capm_results, break_ym, kind="CAPM")
+    print_wald_results(dummy_ff3_results, break_ym, kind="FF3")
 
     # ── LaTeX output ─────────────────────────────────────────────────
     tag = break_ym.replace("-", "")
     save_latex_split(pre_results, post_results, break_ym,
-                     OUT / f"split_sample_{tag}.tex")
-    save_latex_ff3_split(ff3_pre_results, ff3_post_results, break_ym,
-                         OUT / f"split_ff3_{tag}.tex")
+                     OUT / f"split_sample_{tag}_pre.tex",
+                     OUT / f"split_sample_{tag}_post.tex")
+    save_latex_split(ff3_pre_results, ff3_post_results, break_ym,
+                     OUT / f"split_ff3_{tag}_pre.tex",
+                     OUT / f"split_ff3_{tag}_post.tex", ff3=True)
     save_latex_dummy(dummy_mean_results, break_ym,
                      OUT / f"dummy_mean_{tag}.tex")
     save_latex_capm_dummy(dummy_capm_results, break_ym,

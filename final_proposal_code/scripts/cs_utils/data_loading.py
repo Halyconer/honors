@@ -35,10 +35,7 @@ def load_data(data_dir):
 
     # Max daily return
     max_monthly = compute_max_return(daily)
-    if "Max_Abs_Return" in chars.columns:
-        chars = chars.drop(columns=["Max_Abs_Return"])
-    if "Max_Return" in chars.columns:
-        chars = chars.drop(columns=["Max_Return"])
+    chars = chars.drop(columns=["Max_Abs_Return", "Max_Return"], errors="ignore")
     chars = chars.merge(max_monthly, on=["Instrument", "Sort_YearMonth"], how="left")
     print(f"  Max_Return coverage: {chars['Max_Return'].notna().mean():.1%}")
 

@@ -105,7 +105,7 @@
 \titleformat
 	{\section} % Section type being modified
 	[block] % Section layout type, can be: hang, block, display, runin, leftmargin, rightmargin, drop, wrap, frame
-	{\Large\bfseries\centering} % Text formatting of the whole section, i.e. label and title
+	{\normalsize\bfseries\centering} % Text formatting of the whole section, i.e. label and title
 	{\thesection} % Section label (e.g. number) and its formatting
 	{0.5em} % Horizontal space between the section label and title
 	{} % Code before the section title
@@ -116,7 +116,7 @@
 \titleformat
 	{\subsection} % Section type being modified
 	[block] % Section layout type, can be: hang, block, display, runin, leftmargin, rightmargin, drop, wrap, frame
-	{\raggedright\large\bfseries} % Text formatting of the whole section, i.e. label and title
+	{\raggedright\normalsize\bfseries} % Text formatting of the whole section, i.e. label and title
 	{\thesubsection} % Section label (e.g. number) and its formatting
 	{0.5em} % Horizontal space between the section label and title
 	{} % Code before the section title
@@ -195,6 +195,7 @@
 \usepackage{enumitem} % Required for list customization
 
 \setlist{noitemsep} % Customize spacing around and inside lists
+\setlist[description]{font=\normalfont} % Remove bold from description labels
 
 %----------------------------------------------------------------------------------------
 %	LINKS

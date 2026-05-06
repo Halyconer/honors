@@ -42,20 +42,21 @@ def apply_anomaly_filter(chars_df, filter_type):
     return df
 
 
+def _qcut_safe(x, n_portfolios):
+    try:
+        return pd.qcut(x.rank(method="first"), n_portfolios,
+                       labels=range(1, n_portfolios + 1))
+    except ValueError:
+        return pd.Series(np.nan, index=x.index)
+
+
 def assign_quintiles_monthly(chars_df, col, n_portfolios):
     """Assign quintile ranks (1..n_portfolios) per Sort_YearMonth."""
     c = chars_df[["Instrument", "Sort_YearMonth", col, "Market_Cap"]].dropna(subset=[col]).copy()
 
-    def qcut_safe(x):
-        try:
-            return pd.qcut(x.rank(method="first"), n_portfolios,
-                           labels=range(1, n_portfolios + 1))
-        except ValueError:
-            return pd.Series(np.nan, index=x.index)
-
     c["Quintile"] = (
         c.groupby("Sort_YearMonth")[col]
-        .transform(qcut_safe)
+        .transform(lambda x: _qcut_safe(x, n_portfolios))
         .astype(float)
     )
     return c[["Instrument", "Sort_YearMonth", "Quintile", "Market_Cap"]].dropna()
@@ -85,34 +86,22 @@ def assign_quintiles_annual(chars_df, col, n_portfolios):
         print(f"    WARNING: No July sort months found for {col}")
         return pd.DataFrame(columns=["Instrument", "Sort_YearMonth", "Quintile", "Market_Cap"])
 
-    def qcut_safe(x):
-        try:
-            return pd.qcut(x.rank(method="first"), n_portfolios,
-                           labels=range(1, n_portfolios + 1))
-        except ValueError:
-            return pd.Series(np.nan, index=x.index)
-
     june_sorts["Quintile"] = (
         june_sorts.groupby("Sort_YearMonth")[col]
-        .transform(qcut_safe)
+        .transform(lambda x: _qcut_safe(x, n_portfolios))
         .astype(float)
     )
     june_sorts = june_sorts[["Instrument", "Sort_YearMonth", "Quintile", "Market_Cap"]].dropna()
 
     # Expand: each July sort holds through the following June
-    expanded = []
-    for _, row in june_sorts.iterrows():
-        july_date = pd.to_datetime(row["Sort_YearMonth"])
-        for offset in range(12):
-            ym = (july_date + pd.DateOffset(months=offset)).to_period("M")
-            expanded.append({
-                "Instrument": row["Instrument"],
-                "Sort_YearMonth": str(ym),
-                "Quintile": row["Quintile"],
-                "Market_Cap": row["Market_Cap"],
-            })
-
-    return pd.DataFrame(expanded)
+    parts = []
+    for offset in range(12):
+        part = june_sorts[["Instrument", "Sort_YearMonth", "Quintile", "Market_Cap"]].copy()
+        part["Sort_YearMonth"] = (
+            pd.to_datetime(part["Sort_YearMonth"]).dt.to_period("M") + offset
+        ).astype(str)
+        parts.append(part)
+    return pd.concat(parts, ignore_index=True)
 
 
 def _vw_return(group):

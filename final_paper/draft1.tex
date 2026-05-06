@@ -1,12 +1,6 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Honors Thesis — Draft 1
-% Using LTJournalArticle template v2.0
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \documentclass[
 	a4paper,
 	10pt,
-	unnumberedsections,
 	twoside,
 ]{LTJournalArticle}
 
@@ -22,7 +16,7 @@
 %	TITLE SECTION
 %----------------------------------------------------------------------------------------
 
-\title{Did Indonesia's Mobile Trading Revolution Kill the Monday Effect? Evidence from Birru-Style Portfolio Sorts on the IDX, 2012--2024}
+\title{Title}
 
 \author{%
 	Adrian Eddy\textsuperscript{1}\thanks{Corresponding author: \href{mailto:ae2466@nyu.edu}{ae2466@nyu.edu}}
@@ -33,7 +27,7 @@
 % Full-width abstract
 \renewcommand{\maketitlehookd}{%
 	\begin{abstract}
-		\noindent This paper examines whether Indonesia's mobile trading revolution (2017--2024) reduced or eliminated the Monday effect on the Jakarta Stock Exchange (IDX). Following the Birru (2018) portfolio-sort methodology, I construct value-weighted long-short portfolios across eight speculative-stock characteristics --- idiosyncratic volatility, maximum daily return, size, price, age, profitability, dividend-payer status, and book-to-market --- and test day-of-week excess returns and CAPM alphas using Newey-West HAC inference. Comparing a pre-mobile period (2012--2016) to a post-mobile period (2017--2024), this study investigates whether the surge in retail participation, driven by fintech platforms, attenuated sentiment-driven calendar anomalies in an emerging market setting. Preliminary results suggest [TODO: summarize key finding].
+		\noindent This paper examines whether Indonesia's mobile trading revolution (2017--2024) reduced or eliminated the Monday effect on the Jakarta Stock Exchange (IDX). Following the Birru (2018) portfolio-sort methodology, I construct value-weighted long-short portfolios across eight speculative-stock characteristics --- idiosyncratic volatility, maximum daily return, size, price, age, profitability, dividend-payer status, and book-to-market --- and test day-of-week excess returns and CAPM alphas using Newey-West HAC inference. Comparing a pre-mobile period (2012--2016) to a post-mobile period (2017--2024), this study investigates whether the surge in retail participation, driven by fintech platforms, attenuated sentiment-driven calendar anomalies in an emerging market setting. Preliminary results confirm a robust Monday effect in the cross-section of IDX returns, concentrated in portfolios sorted on maximum daily return, book-to-market, and age. Following the 2017 mobile trading revolution, I find that while some traditional anomalies remained stable, the "Age channel" significantly intensified, with Monday underperformance for young stocks increasing from 19 bps to 112 bps per month ($t=2.69$). These findings suggest that while mobile fintech has increased market participation, it may have amplified sentiment-driven herding among a new generation of retail investors.
 	\end{abstract}
 }
 
@@ -62,163 +56,330 @@ This study extends Birru's framework to the Jakarta Stock Exchange, where a natu
 Specifically, this paper asks: Did Indonesia's mobile trading revolution reduce or eliminate the Monday effect on the IDX? I compare a pre-mobile period (2012--2016) to a post-mobile period (2017--2024) using Birru-style portfolio sorts across eight speculative-stock characteristics. This contributes to the literature in two ways: first, by providing out-of-sample evidence for sentiment-driven calendar effects in an emerging market, and second, by exploiting a structural break in retail participation to test whether investor composition modulates these effects.
 
 % Roadmap
-The remainder of this paper is organized as follows. Section~2 reviews the theoretical and empirical literature. Section~3 describes the data and variable construction. Section~4 details the empirical methodology. Section~5 presents results. Section~6 discusses implications, and Section~7 concludes.
+The remainder of this paper is organized as follows. Section~2 describes the data, variable construction, and empirical methodology. Section~3 presents the full-sample and pre/post day-of-week patterns in the cross-section of returns. Section~4 discusses the implications for investor sentiment theory, and Section~5 concludes.
+
+% TODO: Compress Literature Review content (currently in comments below) into this Introduction.
+% Five paragraphs needed: B&W (2006) sentiment channels, Birru (2018) mechanism, limits to arbitrage,
+% IDX mobile shock, Indonesian aggregate evidence. Target ~1.5 pages total.
+
+% ── LITERATURE REVIEW CONTENT (to be compressed into §1 Introduction) ──────────
+% Baker & Wurgler (2006): sentiment bites cross-sectionally via demand + constraint channels.
+%   Speculative bundle = small, young, volatile, unprofitable, non-dividend-paying.
+%
+% Birru (2018): Monday/Friday pattern mirrors weekly mood cycle. Speculative leg crashes
+%   Monday, recovers Friday. >100% of monthly anomaly return on one day. Falsification:
+%   intraday (not overnight), holiday adjacency, news exclusion, low inst. ownership.
+%
+% Limits to arbitrage (DSSW 1990, Shleifer & Vishny 1997): noise-trader risk + capital
+%   withdrawal prevents correction. IDX: OJK Reg IX.A.7 short-sale restrictions, no
+%   deep derivatives market. Harvey (1995): IDX predictability driven by local information.
+%
+% Mobile shock (Barber & Odean 2008, Gao & Huang 2020): mobile apps raise turnover,
+%   shift portfolios toward lottery names. IDX SIDs: 281k (2012) → 1M (2017) → 10M (2024).
+%   60% of new investors aged 18–35. Ajaib, Stockbit, IPOT gamification channels.
+%
+% Indonesian aggregate evidence (Khan 2023, Suryanegara 2024, Emerald 2024): contested.
+%   This contestedness is the opportunity — cross-sectional test is cleaner than aggregate.
+% ─────────────────────────────────────────────────────────────────────────────────────────
 
 %----------------------------------------------------------------------------------------
-%	2. LITERATURE REVIEW
+%	2. DATA AND METHODOLOGY
 %----------------------------------------------------------------------------------------
 
-\section{Literature Review}
+\section{Data and Methodology}
 
-\subsection{Investor Sentiment and Cross-Sectional Returns}
+To investigate whether a day of week effect is present in the IDX and how prevalent it is across different across sections, we employ a portfolio-sort and time-series regression framework following \citet{birru2018}. The empirical design proceeds in three steps. First, we identify the sample of Indonesian equities and calculate appropriate proxies for their ``speculativeness''. Second, we perform monthly cross-sectional sorts to construct portfolios which isolate these characteristics. Finally, we aggregate the daily portfolio returns into monthly observations, then estimating a time-series regression for each day of the week using CAPM and Fama-French three-factor models, allowing us to evaluate risk-adjusted abnormal returns across the week.
 
-% Baker and Wurgler theoretical framework
-\citet{baker2006} established the theoretical foundation linking investor sentiment to the cross-section of stock returns. They identify two channels through which sentiment affects speculative stocks disproportionately. The demand channel operates through valuation subjectivity: stocks with ambiguous fundamentals --- young firms, non-dividend payers, high-volatility names --- allow investors to justify a wider range of valuations contingent on their current mood. The constraint channel recognizes that the same characteristics making stocks speculative also make them costly to arbitrage, preventing rational investors from correcting sentiment-driven mispricing.
+\subsection{Data and Institutional Context}
 
-% Birru's day-of-week evidence
-\citet{birru2018} provides the empirical bridge between sentiment theory and calendar effects. Using long-short portfolios sorted on speculative characteristics, he documents a striking monotonic pattern in U.S.\ returns from Monday through Friday that mirrors weekly mood cycles. For portfolios short the speculative leg, Monday captures more than 100\% of the monthly long-short return; for portfolios long the speculative leg, the pattern concentrates on Fridays. These patterns survive controls for firm-specific news, macroeconomic announcements, and FOMC dates.
+This study examines the universe of 976 common stocks listed on the Jakarta Stock Exchange, all having been listed at some point over a 13-year period from January 2012 through December 2024. Daily closing prices, trading volumes, and firm fundamentals are all sourced from Refinitiv Workspace and its proprietary API. The sample is divided into two sub-periods: the pre-mobile era (2012--2016) and the post-mobile era (2017--2024), with the breakpoint corresponding to the milestone of 1 million Securities Investor IDs. Firms that delist during the sample window are kept in the analysis up until their last trading day. This avoids an upward bias in portfolio alphas that may arise if the sample is restricted to surviving firms, which would be a major concern particularly for the IDX, where regulatory de-listings are frequent. 
 
-\subsection{Emerging Markets and Predictability}
+Preferred shares and duplicate Reuters Instrument Codes (RICs) are excluded from the sample -- a RIC is a unique identifier that Refinitiv uses to identify a specific security in their database. The risk-free rate is proxied by the Bank Indonesia 7-Day Reverse Repo Rate, and the market return is the value-weighted Jakarta Composite Index (JCI).
 
-% Harvey's framework
-\citet{harvey1995} documents that emerging market equity returns exhibit substantially higher predictability than developed markets, with much of this predictability driven by local information variables rather than global factors. Critically, the conditions Harvey identifies --- illiquidity, high transaction costs, short-selling restrictions, and information asymmetry --- map directly onto Baker and Wurgler's channels for sentiment-driven mispricing. This suggests that day-of-week anomalies may be amplified in emerging markets where arbitrage constraints are more severe.
+The Indonesian equity market presents two structural features that shape the empirical design. First, although the IDX lists over 900 firms, trading activity is highly concentrated among the largest 100 firms over the sample period. This is a common characteristic of emerging markets. Following \citet{bekaert2005}, I compute each stock-month's zero-return proportion as $\text{ZR}_{i,m} = \#\{t \in m : r_{i,t} = 0\} / N_{\text{trading},i,m}$. The cross-sectional average for this study is $\overline{\text{ZR}}_{\text{IDX}} \approx 0.64$. Most recorded zero returns reflect non-trading rather than informational silence -- the price for that stock is carried over from a prior session. Where the high-ZR environment introduces estimation bias, it is documented below. Second, the IDX operates as a single, unified exchange, with no Nasdaq/AMEX-style multi-tier structure. These two facts jointly motivate three downstream choices: (1) value-weighting of portfolio returns, (2) all-IDX breakpoints for the main quintile sorts, and (3) a top-100 anchor for Fama--French factor construction.
 
-\subsection{The Indonesian Context}
-
-% IDX history and structural change
-The Jakarta Stock Exchange presents a particularly compelling setting. Following the 2007 merger of the Jakarta and Surabaya exchanges, the IDX has undergone a series of structural transformations \citep{yang2016}. Most relevant to this study is the mobile trading revolution beginning around 2017, which dramatically increased retail market participation. This shift from a market dominated by institutional and foreign investors to one with substantial retail presence creates a natural experiment for testing how investor composition affects sentiment-driven anomalies.
-
-% TODO: Add more specific statistics on SID growth, retail trading volume share, etc.
-
-%----------------------------------------------------------------------------------------
-%	3. DATA
-%----------------------------------------------------------------------------------------
-
-\section{Data}
-
-\subsection{Sample and Sources}
-
-This study examines the universe of common equities listed on the Jakarta Stock Exchange over a 13-year period from January 2012 through December 2024. Daily closing prices, trading volumes, and firm fundamentals are sourced from Refinitiv Workspace. The sample is divided into two sub-periods: the pre-mobile era (2012--2016) and the post-mobile era (2017--2024), with the breakpoint corresponding to the milestone of 1 million Securities Investor IDs.
-
-Preferred shares and duplicate RICs are excluded from the sample. The risk-free rate is proxied by the Bank Indonesia 7-Day Reverse Repo Rate, and the market return is the value-weighted Jakarta Composite Index (JCI).
-
-\subsection{Speculative-Stock Characteristics}
-
-Following \citet{birru2018}, stocks are sorted on eight characteristics that proxy for ``speculativeness'' as defined by \citet{baker2006}:
-
-\begin{enumerate}
-	\item \textbf{Idiosyncratic volatility (Ivol):} Standard deviation of CAPM residuals over a rolling 60-day window, lagged one month. High Ivol is speculative.
-	\item \textbf{Maximum daily return (Max):} Highest single-day return in the prior month. High Max is speculative.
-	\item \textbf{Size:} Log market capitalization, measured monthly. Low size (small firms) is speculative.
-	\item \textbf{Price:} End-of-month share price. Low price is speculative.
-	\item \textbf{Age:} Months since IPO listing on the IDX. Low age (young firms) is speculative.
-	\item \textbf{Profitability (ROA):} Return on assets from quarterly fundamentals. Low ROA (unprofitable firms) is speculative.
-	\item \textbf{Dividend payer:} Binary indicator for whether the firm paid a dividend in the trailing twelve months. Non-payers are speculative.
-	\item \textbf{Book-to-market (BM):} Book value per share divided by market price. High BM is speculative.
-\end{enumerate}
-
-All characteristics except Ivol, Max, and Dividend are rebalanced annually using June values applied from July through June, following the \citet{fama1993} convention. Monthly characteristics are lagged one month to avoid look-ahead bias.
-
-\subsection{Filters}
-
-Following standard practice in the literature, several filters are applied:
+Moreover, following Birru several filters are applied to our universe of RICs:
 \begin{itemize}
-	\item Stocks must have at least 15 trading days in the formation month (for monthly-rebalanced characteristics).
-	\item Financial-sector firms are excluded from the ROA sort.
-	\item Firms with negative book value per share are excluded from the BM sort.
+	\item Stocks must have at least 15 trading days in their respective formation month, to assist with the statistical reliability of the anomalies themselves. Both Ivol and Max are statistics computed from daily returns within a month, hence with fewer ob servations a lower statistical power could be achieved.
+	\item Financial-sector firms are excluded from the ROA sort. Following \citet{fama1993}, financial firms carry high leverage as a normal feature of their business model, so ROA for a bank reflects net interest margin rather than operational efficiency.
+	\item Firms with negative book value per share are excluded from the BM sort. Again following \citet{fama1993}, firms with negative book equity produce a negative BM ratio, which would position them as speculative stocks in the BM sort for the wrong reason: insolvency rather than speculative growth expectations.
 \end{itemize}
 
-%----------------------------------------------------------------------------------------
-%	4. METHODOLOGY
-%----------------------------------------------------------------------------------------
+These filters were selected with the chosen anomalies in mind. Characteristics not subject to anomaly-specific screens in Birru's original design were assumed not to require special treatment.
 
-\section{Methodology}
+\subsection{Speculative Characteristics}
+
+Following \citet{birru2018}, stocks are sorted into quintiles on characteristics that proxy for ``speculativeness''. The theoretical basis for a proxy comes from \citet{baker2006}, who argue that investor sentiment creates the largest cross-sectional mispricing among stocks that are most subject to or \textit{difficult to value}, and those that are most \textit{difficult to arbitrage.} 
+
+\citet{birru2018} operationalises this framework by selecting cross-sectional characteristics, each of which loads on one or both of these dimensions. His key finding is that a long-short spread between safe and speculative stocks is not constant across the week. More explicitly, \citet{birru2018} finds that speculative stocks earn abnormally high returns on Fridays and abnormally low returns on Mondays, a pattern he attributes to systematically changing degrees of optimism throughout the trading week. In this study, seven out of nineteen characteristics were selected. Not all characteristics were analysed because they would fall into one of three categories: those requiring data unavailable or sparsely populated in the IDX, redundancy in anomaly analysis that would delay the limited timeline available, or directional ambiguity in an IDX context.
+
+\begin{description}
+
+  \item[Idiosyncratic Volatility (Ivol).]
+  For each stock $i$ and calendar day $d$, idiosyncratic volatility is the
+  standard deviation of residuals from a rolling-window CAPM regression:
+  \begin{equation*}
+    \text{Ivol}_{i,d} = \sqrt{\hat{\sigma}^{2}_{\varepsilon, i, d}},
+  \end{equation*}
+  where $\hat{\sigma}^{2}_{\varepsilon, i, d}$ is computed from the trailing
+  60 trading days via the algebraic identity
+  \begin{equation*}
+    \hat{\sigma}^{2}_{\varepsilon, i, d}
+      = \widehat{\text{Var}}(r_{i}) + \hat{\beta}_{i,d}^{2}\,\widehat{\text{Var}}(m)
+        - 2\hat{\beta}_{i,d}\,\widehat{\text{Cov}}(r_{i}, m),
+    \qquad
+    \hat{\beta}_{i,d} = \frac{\widehat{\text{Cov}}(r_{i}, m)}{\widehat{\text{Var}}(m)},
+  \end{equation*}
+  with all sample moments computed over the 60-day window ending on day $d$.
+  A stock-day with fewer than 60 available daily return observations is
+  assigned a missing Ivol value. Here $r_{i}$ denotes the raw daily stock
+  return and $m = R_{m,d} - R_{f,d}$ is the market excess return (JCI minus
+  the BI rate). High-Ivol stocks are hard to arbitrage because idiosyncratic
+  risk cannot be hedged away, deterring short-sellers from correcting
+  overpricing \citep{shleifer1997}. \textit{High Ivol is speculative.}
+
+  \item[Maximum Daily Return (Max).]
+  The highest single-day return in the prior calendar month,
+  $\text{Max}_{i,m} = \max_{t \in m-1} r_{i,t}$, following \citet{bali2011}.
+  High-Max stocks attract investors who overprice the small probability of
+  extreme gains, consistent with probability weighting in cumulative prospect
+  theory \citep{barberis2008}. \textit{High Max is speculative.}
+
+  \item[Size.]
+  The natural logarithm of end-of-month market capitalisation,
+  $\text{Size}_{i,m} = \ln(P_{i,m} \times \text{Shares}_{i,m})$ \citep{banz1981}.
+  Small firms satisfy both Baker--Wurgler criteria: sparse analyst coverage
+  makes them hard to value, while illiquidity and high transaction costs make
+  them hard to arbitrage. \textit{Low Size is speculative.}
+
+  \item[Age.]
+  Months elapsed since the stock's first IDX listing date. Without an
+  established earnings track record, the fundamental value of young firms is
+  highly uncertain, making prices sensitive to investor narratives rather than
+  observable cash flows \citep{barry1984}. \textit{Low Age is speculative.}
+
+  \item[Profitability (ROA).]
+  Return on assets computed from quarterly financial statements:
+  $\text{ROA}_{i,q} = \text{Net Income}_{i,q} / \text{Total Assets}_{i,q}$.
+  For firms with near-zero or negative earnings, standard valuation multiples
+  are uninformative, leaving prices anchored primarily to speculative beliefs
+  about future recovery \citep{baker2006}. Financial-sector firms are excluded.
+  \textit{Low ROA is speculative.}
+
+  \item[Dividend Payer.]
+  A binary indicator equal to one if the firm declared a cash dividend in the
+  trailing twelve months. Dividend payments provide a concrete cash-flow anchor
+  for valuation; non-payers offer no such anchor, making their prices more
+  susceptible to sentiment shifts \citep{baker2004}.
+  \textit{Non-payers are speculative.}
+
+  \item[Book-to-Market (BM).]
+  Book value per share (most recent December fiscal year-end) divided by the
+  June closing price, following the \citet{fama1993} rebalancing convention.
+  Low-BM growth stocks derive most of their value from distant expected
+  earnings rather than tangible assets, making them the most sentiment-sensitive
+  category in \citet{baker2006}. Firms with negative book value are excluded.
+  \textit{Low BM (growth) is speculative.}
+
+  \end{description}
 
 \subsection{Portfolio Construction}
 
-The empirical design follows the Birru (2018) JFE-style portfolio-sort approach:
+The subsequent step, after defining the dataset and speculative characteristics, is to conduct monthly portfolio sorts. Market-sensitive characteristics (Ivol, Max) are re-sorted each month-end. Accounting-based characteristics (BM, ROA, Size, Age, Dividend) are re-sorted every July using the previous December's fiscal year-end data, following \citet{fama1993}. In the case of Indonesia, the Financial Services Authority (OJK) mandates annual statement filing within four months of fiscal year-end, so a July rebalance gives a comfortable three-month buffer beyond the disclosure deadline.
 
-\begin{enumerate}
-	\item \textbf{Cross-sectional sort:} Each month (or each June for annual characteristics), stocks are sorted into quintiles based on a speculative characteristic. For the binary dividend variable, stocks are grouped into payers and non-payers.
-	\item \textbf{Value-weighted returns:} Daily value-weighted portfolio returns are computed for the top quintile (speculative leg) and bottom quintile (safe leg), plus the long-short spread defined as Safe minus Speculative:
-	\begin{equation}
-		R_{\text{L-S},d} = R_{\text{Safe},d} - R_{\text{Speculative},d}
-		\label{eq:ls}
-	\end{equation}
-	\item \textbf{Day-of-week separation:} Daily portfolio returns are separated by day of the week: Monday, Friday, and a Tuesday--Thursday aggregate.
-	\item \textbf{Monthly aggregation:} Daily returns within each (month $\times$ day-of-week) cell are summed to produce monthly return observations.
-\end{enumerate}
+At the end of each formation month $M$, eligible RICs are ranked univariately on a single characteristic. Ranks are computed cross-sectionally, meaning that breakpoints are derived from the full universe of eligible IDX stocks rather than a pre-determined sub-sample. While this departs from \citet{birru2018}---who restricts breakpoint calculation to NYSE stocks to prevent micro-caps from compressing the decile grid---all-market breakpoints are appropriate for the IDX, as it operates as a single unified exchange without an intricate size-tiered sub-market structure.
 
-\subsection{Time-Series Tests}
+Eligible stocks are sorted into $N = 5$ equal-count \textit{quintiles} (rather than deciles) to avoid empty portfolios in the thinner tails of the smaller IDX cross-section. For the binary Dividend characteristic, stocks are simply divided into two groups (payers and non-payers).
 
-The final inference is drawn from time-series regressions on the monthly aggregated portfolio returns. Two specifications are estimated with Newey-West HAC standard errors:
-
-\textbf{Mean test.} Monthly excess portfolio returns are regressed on a constant only:
+Several anomalies---in particular BM---can suffer from look-ahead bias if portfolio sorts use financials before they are publicly disclosed. Following the lag convention of \citet{fama1993}, the measurement operator $\mathcal{C}_{i, M-1}$ is defined as any function of prices, volumes, or fundamentals realised strictly before the opening on month $M$. The portfolio assignment function $\pi$ is thus:
 \begin{equation}
-	R^{e}_{p,t} = \alpha + \varepsilon_t
+    \pi_{i, M} = \pi\!\big(\mathcal{C}_{i, M-1}\big)
+\end{equation}
+
+The quintile assignment established at the end of formation month $M$ is held fixed for all trading days $t$ within the portfolio-holding month $M$. Portfolios are constructed using a value-weighted mean of constituent returns:
+\begin{equation}
+    R_{p,t \in M} = \sum_{i : \pi_{i, M} = p} w_{i, M-1} \, r_{i,t}, \qquad \sum_{i \in p} w_{i, M-1} = 1
+\end{equation}
+Under value-weighting, weights are proportional to lagged market capitalisation:
+\begin{equation}
+    w_{i, M-1} = \frac{\text{MCap}_{i, M-1}}{\sum_{j \in p} \text{MCap}_{j, M-1}}
+\end{equation}
+Crucially, the weight $w_{i, M-1}$ remains constant throughout the holding month $M$. By anchoring the weights to the market capitalisation observed at the end of month $M{-}1$, we ensure that no information from month $M$ enters the weighting process, thereby avoiding look-ahead bias. Furthermore, value-weighting ensures that the portfolio return reflects economically significant positions; illiquid micro-caps with near-zero trading activity contribute proportionally less to the portfolio return, which is consistent with the high zero-return environment documented in Section~2.1.
+
+The primary object of analysis is not the individual quintile portfolio but rather the value-weighted long-short (L--S) spread portfolio, which serves as the test asset throughout the empirical work. Following the design of \citet{birru2018}, the L--S spread isolates the cross-sectional sentiment dimension by netting out market-wide drift: any factor that affects all stocks uniformly enters both legs and cancels in the difference, leaving only the speculative-versus-safe contrast that the sentiment hypothesis predicts. For each characteristic, the spread is defined as the Safe leg minus the Speculative leg:
+\begin{equation}
+    R_{LS, t} = R_{\text{Safe}, t} - R_{\text{Spec}, t}
+\end{equation}
+where each leg is itself a value-weighted portfolio constructed via the weights $w_{i, M-1}$ defined above. The Safe and Speculative assignments correspond to the bottom and top quintiles of the sort, with the directionality determined by each characteristic's speculative direction (see Section~2.2); for the binary Dividend characteristic, the Safe and Speculative legs are payers and non-payers respectively. Following the convention of \citet{birru2018}, a positive $R_{LS, t}$ indicates that safe stocks outperformed speculative stocks on day $t$.
+
+By construction, the L--S spread is a zero-cost, self-financing portfolio: longing one rupiah of the Safe leg is financed by shorting one rupiah of the Speculative leg. Consequently, the risk-free rate cancels in the excess-return calculation:
+\begin{equation}
+    R^{e}_{LS, t} = (R_{\text{Safe}, t} - R_{f, t}) - (R_{\text{Spec}, t} - R_{f, t}) = R_{LS, t}
+\end{equation}
+All subsequent regressions on $R_{LS, t}$ therefore test the spread against zero rather than against the risk-free rate.
+
+It bears noting that on the IDX, the L--S spread is an analytical construct rather than a literally implementable strategy: short-selling is restricted to a designated list of stocks under OJK Regulation IX.A.7, and retail access to the securities-lending market is effectively unavailable. The empirical persistence of $R_{LS, t}$ across the sample is therefore consistent with binding limits to arbitrage rather than evidence of an unexploited profit opportunity.
+
+
+\subsection{Time-Series Estimation}
+
+Because standard risk-adjustment models rely on monthly factors, regressions on high-frequency returns are often noisy and statistically problematic due to factors like autocorrelation. To facilitate robust time-series regressions, this research follows \citet{birru2018}, who evaluates each day of the week as an independent monthly data point. More explicitly, we construct a monthly return series that isolates each day of the week by aggregating the daily returns into a single monthly observation via arithmetic summation:
+\begin{equation}
+	R_{p, d, M} = \sum_{t \in \mathcal{T}_{d, M}} r_{p,t}
+\end{equation}
+Here, $r_{p,t}$ is the daily return of portfolio $p$ on date $t$, and $\mathcal{T}_{d, M}$ is the set of all dates $t$ falling on day-of-week $d$ within month $M$. The same arithmetic summation is applied to the daily risk-free rate ($r_{f,t}$)\footnote{The daily risk-free rate is constructed from the Bank Indonesia 7-Day Reverse Repo Rate via the discrete annual-to-daily conversion $r_{f,t} = (1 + \text{BI}_{t}^{\text{ann}})^{1/252} - 1$, assuming 252 trading days per year. At a representative policy rate of $6\%$, $r_{f,t} \approx 2.3 \times 10^{-4}$ per day --- two orders of magnitude smaller than a typical daily stock return's standard deviation, and approximately constant within any given month. The choice of risk-free proxy therefore does not bind on inference.} and the daily market return ($r_{m,t}$) to construct their monthly day-specific equivalents, $R_{f, d, M}$ and $R_{m, d, M}$. The dependent variable in our regressions is the monthly day-specific excess return, defined as $R^{e}_{p, d, M} = R_{p, d, M} - R_{f, d, M}$.
+
+The choice of arithmetic over geometric monthly aggregation is deliberate. Following \citet{birru2018}, arithmetic summation permits a linear decomposition of the total monthly return into its day-of-week components, $R_{p, M} \approx \sum_{d} R_{p, d, M}$, which allows a single day to account for over $100\%$ of an anomaly's monthly return --- a finding that geometric compounding would mask through cross-product terms.
+
+In determining the appropriate econometric framework for these aggregated returns, it is critical to distinguish between cross-sectional and time-series objectives. A cross-sectional approach, such as the two-step procedure of \citet{fama1973}, is designed to estimate cross-sectional risk premia across individual assets. However, our hypothesis explicitly concerns the conditional mean of a portfolio return stream—a time-series parameter. A panel specification with two-way fixed effects is similarly inappropriate: any regressor that varies only over time, including the day-of-week indicator and the post-2017 dummy, lies in the column space of the time-fixed-effects matrix and is therefore unidentified. An entity-fixed-effects panel is identified but less efficient than the portfolio time-series framework, since contemporaneous stock returns are cross-sectionally correlated through shared market exposure and require two-way clustering of standard errors for valid inference. 
+
+Therefore, we adopt a portfolio time-series regression framework. This approach offers two primary econometric advantages. First, forming value-weighted portfolios prior to estimation substantially improves the signal-to-noise ratio by diversifying away stock-level idiosyncratic variance that would otherwise dilute the estimator. Second, the single time-series framework naturally accommodates Newey-West HAC standard errors to robustly adjust for autocorrelation and heteroskedasticity in the residuals.\footnote{Specifically, the \citet{newey1987} variance estimator weights residual autocovariances by a Bartlett kernel: $\hat{\Omega} = \hat{\Gamma}_0 + \sum_{j=1}^{L} \big(1 - j/(L{+}1)\big)\big(\hat{\Gamma}_j + \hat{\Gamma}_j'\big)$, where $\hat{\Gamma}_j$ is the lag-$j$ sample autocovariance matrix of the score. The triangular weighting guarantees that $\hat{\Omega}$ is positive semi-definite.} In all regressions, the Newey-West lag length is dynamically set using the rule of thumb $\lfloor 0.75 \times T^{1/3} \rfloor$, where $T$ is the number of monthly observations.
+
+For every portfolio $p$ and day of week $d$, we estimate three separate specifications to evaluate performance:
+
+\textit{Mean test.} Monthly excess portfolio returns are regressed on a constant only:
+\begin{equation}
+	R^{e}_{p, d, M} = \alpha + \varepsilon_M
 	\label{eq:mean}
 \end{equation}
-This tests $H_0\colon \alpha = 0$, i.e., whether the mean excess return for a given day-of-week portfolio is significantly different from zero.
+This tests $H_0\colon \alpha = 0$, i.e., whether the mean excess return for a given day-of-week portfolio is significantly different from zero before adjusting for systematic risk.
 
-\textbf{CAPM alpha.} Monthly excess portfolio returns are regressed on a constant and the market excess return:
+\textit{CAPM alpha.} Monthly excess portfolio returns are regressed on a constant and the market excess return:
 \begin{equation}
-	R^{e}_{p,t} = \alpha + \beta (R_{M,t} - R_{f,t}) + \varepsilon_t
+	R^{e}_{p, d, M} = \alpha + \beta (R_{m, d, M} - R_{f, d, M}) + \varepsilon_M
 	\label{eq:capm}
 \end{equation}
-The intercept $\alpha$ is the risk-adjusted abnormal return.
+Here, $(R_{m, d, M} - R_{f, d, M})$ is the aggregated excess return of the market (proxied by the JCI minus the BI Reverse Repo Rate). The intercept $\alpha$ is the risk-adjusted abnormal return holding market exposure constant.\footnote{Strictly, by restricting estimation to the subsample of day-$d$ observations, the OLS estimator yields a \textit{conditional} beta $\hat{\beta}_d = \widehat{\text{Cov}}(R_p, R_m \mid \text{day} = d) / \widehat{\text{Var}}(R_m \mid \text{day} = d)$ rather than the standard unconditional CAPM beta; the intercept is correspondingly a conditional Jensen alpha. \citet{french1980} documents that the market itself has a Monday anomaly, so $\hat{\beta}_d \neq \hat{\beta}_{\text{unconditional}}$ in general. The estimand remains interpretable in the same units as the standard CAPM alpha, but reflects the pricing of risk specifically on day-of-week $d$.}
 
-The unit of observation in both regressions is a month, not a stock. The portfolio sort (steps 1--2) is a cross-sectional operation that produces the return series, but inference is drawn from time-series tests on those portfolio returns --- the standard ``portfolio sort + time-series test'' approach from empirical asset pricing.
+\textit{Fama-French 3-factor alpha.} To ensure that observed anomalies are not merely compensation for size or value risk, I estimate a three-factor model:
+\begin{equation}
+	R^{e}_{p, d, M} = \alpha + \beta_1 (R_{m, d, M} - R_{f, d, M}) + \beta_2 \text{SMB}_{d, M} + \beta_3 \text{HML}_{d, M} + \varepsilon_M
+	\label{eq:ff3}
+\end{equation}
+where $\text{SMB}_{d, M}$ and $\text{HML}_{d, M}$ are the monthly day-aggregated Small-Minus-Big and High-Minus-Low factor returns. These underlying factors are constructed specifically for the IDX following the methodology of \citet{foye2020}, utilizing $2 \times 3$ independent cross-sectional sorts on market capitalization and book-to-market ratios. Critically, the breakpoints for both sorts are derived exclusively from the 100 largest IDX stocks by December-end market capitalization and then applied to all eligible firms; this is the IDX analogue of \citet{fama1993}'s NYSE-only breakpoint convention, which prevents micro-caps from compressing the size dimension while leaving the resulting portfolios spanning the full investable cross-section. The resulting six portfolios $\{SH, SM, SL, BH, BM, BL\}$ form the factors:
+\begin{align*}
+    \text{SMB}_t &= \tfrac{1}{3}(R_{SH,t} + R_{SM,t} + R_{SL,t}) - \tfrac{1}{3}(R_{BH,t} + R_{BM,t} + R_{BL,t}) \\
+    \text{HML}_t &= \tfrac{1}{2}(R_{BH,t} + R_{SH,t}) - \tfrac{1}{2}(R_{BL,t} + R_{SL,t})
+\end{align*}
+which are then aggregated to the monthly day-specific frequency $\text{SMB}_{d, M}$ and $\text{HML}_{d, M}$ by arithmetic summation, identically to the dependent variable. The intercept $\alpha$ in equation~\ref{eq:ff3} isolates the abnormal return after controlling for market, size, and value dimensions of risk.
 
-\subsection{Pre--Post Comparison}
+The unit of observation in all regressions is a month, not a stock. The portfolio sort (steps 1--2) is a cross-sectional operation that produces the return series, but inference is drawn from time-series tests on those portfolio returns --- the standard ``portfolio sort + time-series test'' approach from empirical asset pricing.
 
-To test whether Indonesia's mobile trading revolution attenuated the Monday effect, all regressions are estimated separately for the pre-mobile period (2012--2016) and the post-mobile period (2017--2024). Sensitivity analyses use alternative breakpoints at 2016 and 2020 to assess robustness.
+\subsection{Structural Break Test}
+
+To formally test whether Indonesia's mobile trading revolution intensified the Monday effect, I estimate an interaction-dummy model across the full sample (2012--2024). Let $D^{\text{post}}_M$ be an indicator variable equal to one for the post-mobile period (2017--2024), and zero otherwise. The structural break is tested by augmenting the factor models with this dummy and its interaction with the risk factors. For the CAPM specification, the pooled model is:
+\begin{equation}
+	R^{e}_{p, d, M} = \alpha + \alpha_{\text{post}} D^{\text{post}}_M + \beta (R_{m, d, M} - R_{f, d, M}) + \beta_{\text{post}} D^{\text{post}}_M (R_{m, d, M} - R_{f, d, M}) + \varepsilon_M
+	\label{eq:break_capm}
+\end{equation}
+Coefficients may be interpreted as follows: $\alpha$ is the pre-period alpha and $\alpha + \alpha_{\text{post}}$ is the post-period alpha; $\beta$ is the pre-period market beta and $\beta + \beta_{\text{post}}$ is the post-period beta. Including the $\beta_{\text{post}}$ interaction absorbs any shift in market sensitivity that occurred post-2017, ensuring that $\alpha_{\text{post}}$ captures only the change in risk-adjusted abnormal return rather than a mechanical consequence of a shifting beta. The parameter of interest is $\alpha_{\text{post}}$: a positive value indicates that the L-S alpha is \textit{larger} post-2017 (intensification of the anomaly); a negative value indicates attenuation.
+
+Rather than relying solely on the individual $t$-statistic for $\alpha_{\text{post}}$, the formal test of structural change is conducted using a joint Wald $F$-test on the interaction terms ($H_0\colon \alpha_{\text{post}} = 0 \text{ and } \beta_{\text{post}} = 0$). This tests for a parameter shift in both the intercept and slope at the pre-specified break date. Importantly, the Wald $F$-statistic is calculated using heteroskedasticity-robust Newey-West HAC covariance, which does not assume homoskedastic i.i.d. errors. A similar pooled model is implemented for the three-factor model.
+
 
 %----------------------------------------------------------------------------------------
-%	5. RESULTS
+%	3. DAY OF THE WEEK AND THE CROSS-SECTION OF RETURNS
 %----------------------------------------------------------------------------------------
 
-\section{Results}
-
-% TODO: Insert result tables from output/
-% Available tables:
-%   \input{../final_proposal_code/output/dow_excess_returns.tex}
-%   \input{../final_proposal_code/output/dow_capm_alphas.tex}
-%   \input{../final_proposal_code/output/split_sample_201701.tex}
-%   \input{../final_proposal_code/output/dummy_mean_201701.tex}
+\section{Day of the Week and the Cross-Section of Returns}
 
 \subsection{Full-Sample Day-of-Week Patterns}
 
-% TODO: Describe full-sample excess returns and CAPM alphas by day-of-week
+Table~\ref{tab:excess_returns} presents the full-sample mean excess returns for value-weighted long-short portfolios sorted on speculative characteristics. Following \citet{birru2018}, the long-short spread is defined as Safe minus Speculative, such that a positive value indicates that speculative stocks underperformed safe stocks on a given day.
+
+Consistent with the Monday effect hypothesis, I find significant Monday underperformance for several speculative portfolios. The Max Return portfolio exhibits a Monday long-short spread of 72.2 bps ($t=3.45$), while the Book-to-Market (BM) spread is 61.4 bps ($t=3.36$). Interestingly, the Size factor shows a reverse pattern on Mondays ($-37.7$ bps, $t=-2.00$), suggesting that in the Indonesian context, large-cap stocks may be more sensitive to Monday sentiment shifts than small-caps, or that liquidity constraints for small stocks prevent the full realization of the anomaly on Mondays.
+
+Tables~\ref{tab:capm_alphas} and~\ref{tab:ff3_alphas} confirm that these patterns are robust to risk adjustment. The Monday alpha for the Max portfolio remains highly significant at 73.9 bps ($t=3.51$) under CAPM and 71.9 bps ($t=3.55$) under the Fama-French three-factor model. This suggests that the Monday effect in Indonesia is not a mere artifact of market risk or exposure to size and value factors.
+
+\begin{table*}[htbp]
+	\caption{Day-of-Week Excess Returns by Speculative Characteristic (bps/month)}
+	\label{tab:excess_returns}
+	\input{../final_proposal_code/output/dow_excess_returns.tex}
+\end{table*}
+
+\begin{table*}[htbp]
+	\caption{Day-of-Week CAPM Alphas by Speculative Characteristic (bps/month)}
+	\label{tab:capm_alphas}
+	\input{../final_proposal_code/output/dow_capm_alphas.tex}
+\end{table*}
+
+\begin{table*}[htbp]
+	\caption{Day-of-Week Fama-French 3-Factor Alphas by Speculative Characteristic (bps/month)}
+	\label{tab:ff3_alphas}
+	\input{../final_proposal_code/output/dow_ff3_alphas.tex}
+\end{table*}
 
 \subsection{Pre-Mobile vs.\ Post-Mobile Comparison}
 
-% TODO: Describe split-sample results
+The central hypothesis of this study is that Indonesia's mobile trading revolution, beginning in 2017, served as a structural shock to the composition of market participants and, consequently, the magnitude of sentiment-driven anomalies. Tables~\ref{tab:split_pre} and~\ref{tab:split_post} present the split-sample excess returns, and Tables~\ref{tab:split_ff3_pre} and~\ref{tab:split_ff3_post} the Fama-French alphas, for the pre-2017 and post-2017 periods.
+
+The most striking finding is the intensification of the "Age channel." In the pre-mobile period (2012--2016), the Monday long-short spread for portfolios sorted on firm age was a statistically insignificant 19.2 bps ($t=0.96$). In the post-mobile period (2017--2024), this spread exploded to 111.7 bps ($t=2.69$), or 117.8 bps ($t=3.03$) after adjusting for Fama-French factors. This suggests that the influx of younger, tech-savvy retail investors using mobile platforms may have created a new sentiment channel concentrated in younger firms, which are often the focus of retail herding and "story-stock" narratives on fintech apps.
+
+Other anomalies, such as Max Return and Book-to-Market, remained robustly significant across both periods, though their magnitudes shifted slightly. The Max Return Monday spread decreased from 82.1 bps to 61.0 bps, while the BM spread increased from 49.9 bps to 75.4 bps.
+
+Table~\ref{tab:wald_ff3} provides the formal HAC Wald tests for structural breaks in the Fama-French alpha and factor loadings. The results show significant breaks for Ivol ($F=3.73$, $p<0.01$) and Size ($F=3.84$, $p<0.01$) on Fridays, and for Size ($F=2.59$, $p<0.05$) on Mondays. The joint test for the Age channel on Mondays confirms a shift at the 5\% level ($F=2.93$).
+
+\begin{table*}[htbp]
+	\caption{Day-of-Week Excess Returns: Pre-Period (Break 2017-01, bps/month)}
+	\label{tab:split_pre}
+	\input{../final_proposal_code/output/split_sample_201701_pre.tex}
+\end{table*}
+
+\begin{table*}[htbp]
+	\caption{Day-of-Week Excess Returns: Post-Period (Break 2017-01, bps/month)}
+	\label{tab:split_post}
+	\input{../final_proposal_code/output/split_sample_201701_post.tex}
+\end{table*}
+
+\begin{table*}[htbp]
+	\caption{Day-of-Week FF3 Alphas: Pre-Period (Break 2017-01, bps/month)}
+	\label{tab:split_ff3_pre}
+	\input{../final_proposal_code/output/split_ff3_201701_pre.tex}
+\end{table*}
+
+\begin{table*}[htbp]
+	\caption{Day-of-Week FF3 Alphas: Post-Period (Break 2017-01, bps/month)}
+	\label{tab:split_ff3_post}
+	\input{../final_proposal_code/output/split_ff3_201701_post.tex}
+\end{table*}
+
+\begin{table*}[htbp]
+	\caption{FF3 Structural Break Tests: HAC Wald $F$-Statistics (Break 2017-01)}
+	\label{tab:wald_ff3}
+	\input{../final_proposal_code/output/dummy_ff3_201701.tex}
+\end{table*}
 
 \subsection{Sensitivity Analysis}
 
-% TODO: Alternative breakpoints (2016, 2020)
+To ensure that the results are not sensitive to the specific choice of the January 2017 breakpoint, I repeat the split-sample analysis using an alternative breakpoint of January 2016. The results (available in the appendix) are qualitatively consistent with the primary findings. Specifically, the Monday effect remains robust for Max Return and Book-to-Market portfolios across both periods, and the shift toward a significant Age channel remains evident. Using the 2016 break, the Monday long-short spread for Age increases from 19.8 bps in the pre-period to 101.0 bps in the post-period, confirming that the intensification of this channel is a robust feature of the mid-2010s structural shift in the Indonesian market.
 
 %----------------------------------------------------------------------------------------
-%	6. DISCUSSION
+%	4. INVESTOR SENTIMENT AND THE DAY-OF-THE-WEEK EFFECT
 %----------------------------------------------------------------------------------------
 
-\section{Discussion}
+\section{Investor Sentiment and the Day-of-the-Week Effect}
 
-% TODO: Interpret results in light of:
-% - Birru (2018) U.S. patterns
-% - Baker and Wurgler (2006) sentiment channels
-% - Harvey (1995) emerging market predictability
-% - Yang and Pangastuti (2016) IDX institutional structure
-% - Role of foreign vs. retail investors
-% - Friday prayer / cultural factors
+% TODO §4.1 — The Role of Speculative Characteristics
+%   Synthesize B&W (2006). Why Age is the canonical unanchored characteristic.
+%   Post-2017 IDX IPO surge as the supply-side complement.
+%
+% TODO §4.2 — Time-Series Variation in Sentiment (The Paradox of Access)
+%   Mobile retail = attention-driven noise traders (Barber & Odean 2008, Gao & Huang 2020).
+%   Democratising access amplifies anomaly in story stocks, does not eliminate it.
+%   Birru §4.2 / B&W 2007: flight-to-quality cancels at index level — explains why
+%   safe leg loses significance post-2017 while speculative leg deepens.
 
 %----------------------------------------------------------------------------------------
-%	7. CONCLUSION
+%	5. CONCLUSION
 %----------------------------------------------------------------------------------------
 
 \section{Conclusion}
 
-% TODO: Summarize findings, limitations, and future research directions
+This study investigated whether Indonesia's mobile trading revolution (2017--2024) reduced or eliminated the Monday effect on the IDX. Using Birru-style portfolio sorts and time-series regressions, I find that the Monday effect remains a robust feature of the Indonesian market, particularly for stocks with high maximum daily returns and those with high book-to-market ratios. 
+
+Contrary to the hypothesis that increased retail participation might improve efficiency and eliminate anomalies, the evidence suggests that the post-2017 period saw an intensification of the Monday effect in specific segments of the market. Most notably, the "Age channel" emerged as a dominant driver of Monday underperformance in the post-mobile era, with young firms exhibiting significantly higher sentiment-driven returns. These results suggest that while fintech platforms have lowered the barriers to entry for millions of new investors, they may have also introduced new forms of sentiment-driven herding that amplify, rather than attenuate, traditional calendar anomalies.
+
+Future research could explore the specific mechanisms behind the Age channel's intensification, such as the role of social media "finfluencers" and the gamification of trading apps in driving retail attention toward younger firms. Additionally, extending this analysis to other emerging markets undergoing similar digital transformations would provide valuable evidence on the generalizability of these findings.
 
 %----------------------------------------------------------------------------------------
 %	REFERENCES

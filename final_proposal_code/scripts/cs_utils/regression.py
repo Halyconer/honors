@@ -12,6 +12,39 @@ def nw_lag(T):
     return max(1, int(0.75 * T ** (1 / 3)))
 
 
+def filter_and_aggregate_by_day(monthly, day_group):
+    """
+    Filter a monthly DataFrame to a specific day group.
+
+    For "Tue-Thu", collapses Tuesday/Wednesday/Thursday into a single
+    summed observation per month. For all other day groups, returns a
+    filtered copy with rows matching that day name only.
+
+    Parameters
+    ----------
+    monthly : DataFrame from aggregate_monthly_legs
+    day_group : str, e.g. "Monday", "Friday", "Tue-Thu"
+
+    Returns filtered DataFrame with a "YM" index column.
+    """
+    if day_group == "Tue-Thu":
+        day_data = monthly[monthly["DayName"].isin(["Tuesday", "Wednesday", "Thursday"])]
+        agg_kwargs = dict(
+            LS_Monthly=("LS_Monthly", "sum"),
+            Spec_Monthly=("Spec_Monthly", "sum"),
+            Safe_Monthly=("Safe_Monthly", "sum"),
+            Rf_Monthly=("Rf_Monthly", "sum"),
+            MktRF_Monthly=("MktRF_Monthly", "sum"),
+            N_Days=("N_Days", "sum"),
+        )
+        for fac in ["SMB_Monthly", "HML_Monthly"]:
+            if fac in monthly.columns:
+                agg_kwargs[fac] = (fac, "sum")
+        return day_data.groupby("YM").agg(**agg_kwargs).reset_index()
+    else:
+        return monthly[monthly["DayName"] == day_group].copy()
+
+
 def aggregate_monthly_legs(legs_daily, date_info):
     """
     Sum daily returns within each (month, day-of-week) for each leg.

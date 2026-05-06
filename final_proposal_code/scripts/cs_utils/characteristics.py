@@ -17,15 +17,6 @@ def compute_ivol(daily_df: pd.DataFrame) -> pd.DataFrame:
     df = daily_df.dropna(subset=["Stock_Return", "Market_Excess"]).copy()
     df = df.sort_values(["Instrument", "Date"])
 
-    def solve_ivol(window):
-        # window is a 2D array if we use a helper, but rolling.apply passes 1D.
-        # We'll use a trick: rolling on an index and then looking up data.
-        pass
-
-    # A more robust vectorized way for rolling regressions:
-    # Let y = beta*x + e.  beta = cov(x,y)/var(x).  e = y - beta*x.
-    # We need rolling cov and rolling var.
-    
     # 1. Rolling window stats per instrument
     g = df.groupby("Instrument")
     
